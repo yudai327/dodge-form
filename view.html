@@ -5,91 +5,145 @@
     <title>集計・配車管理</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 pb-20">
-    <div class="max-w-6xl mx-auto">
+<body class="bg-gray-100 p-4 pb-32"> <div class="max-w-6xl mx-auto">
         <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <h1 class="text-2xl font-bold text-gray-800">📊 回答集計・配車管理</h1>
-            <div class="flex gap-2">
-                <select id="sheetSelect" class="border p-2 rounded-lg bg-white shadow-sm"></select>
-                <button onclick="loadData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">読込</button>
+            <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                <span>📊</span> 回答集計・配車管理
+            </h1>
+            <div class="flex gap-2 w-full md:w-auto">
+                <select id="sheetSelect" class="flex-1 md:flex-none border-2 border-blue-200 p-2 rounded-lg bg-white shadow-sm font-bold text-blue-800"></select>
+                <button onclick="loadData()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-blue-700 transition">読込</button>
+            </div>
+        </div>
+
+        <div id="urlDisplayArea" class="hidden mb-6 p-4 bg-white rounded-xl shadow-sm border-2 border-yellow-200">
+            <div class="flex flex-col md:flex-row items-center gap-3">
+                <span class="text-sm font-bold text-yellow-800 whitespace-nowrap">🔗 このイベントの案内URL:</span>
+                <input type="text" id="eventUrl" readonly class="flex-1 w-full p-2 bg-gray-50 border rounded text-xs text-gray-600 focus:outline-none">
+                <button onclick="copyEventUrl()" class="w-full md:w-auto bg-yellow-500 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-yellow-600 transition">
+                    URLをコピー
+                </button>
             </div>
         </div>
 
         <div id="summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"></div>
 
-        <div class="bg-white rounded-xl shadow-lg overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[800px]">
+        <div class="bg-white rounded-2xl shadow-xl overflow-x-auto border border-gray-200">
+            <table class="w-full text-left border-collapse min-w-[900px]">
                 <thead>
-                    <tr class="bg-gray-200 text-gray-700 text-sm">
-                        <th class="p-3 border">学年</th><th class="p-3 border">名前</th>
-                        <th class="p-3 border">参加</th><th class="p-3 border">送迎</th>
-                        <th class="p-3 border">備考</th><th class="p-3 border bg-yellow-50 text-blue-800 font-bold">他車（配車先）</th>
+                    <tr class="bg-gray-800 text-white text-sm">
+                        <th class="p-4 border-r border-gray-700">学年</th>
+                        <th class="p-4 border-r border-gray-700">名前</th>
+                        <th class="p-4 border-r border-gray-700 text-center">参加</th>
+                        <th class="p-4 border-r border-gray-700 text-center">送迎(人数)</th>
+                        <th class="p-4 border-r border-gray-700 text-center">備考</th>
+                        <th class="p-4 bg-yellow-100 text-blue-900 font-bold text-center">他車（配車先）</th>
                     </tr>
                 </thead>
-                <tbody id="dataTable" class="text-sm"></tbody>
+                <tbody id="dataTable" class="text-sm">
+                    <tr><td colspan="6" class="p-10 text-center text-gray-400 font-bold">イベントを選択して「読込」を押してください</td></tr>
+                </tbody>
             </table>
         </div>
 
-        <div class="fixed bottom-6 left-1/2 -translate-x-1/2">
-            <button onclick="saveChanges()" id="saveBtn" class="bg-green-600 text-white px-10 py-4 rounded-full font-bold shadow-2xl hover:bg-green-700 transition transform active:scale-95">
+        <div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md">
+            <button onclick="saveChanges()" id="saveBtn" class="w-full bg-green-600 text-white px-10 py-4 rounded-2xl font-extrabold shadow-2xl hover:bg-green-700 transition transform active:scale-95 text-lg border-b-4 border-green-800">
                 配車情報を保存する
             </button>
         </div>
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxc7i-jap8kSe2_0uY-dTuvPco5yuYHxtBiPBzL47sbXGfqrACWDnY-uvBui4SAQwRRQw/exec";
-        let currentRows = []; // スプレッドシートの生データ
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxc7i-jap8kSe2_0uY-dTuvPco5yuYHxtBiPBzL47sbXGfqrACWDnY-uvBui4SAQwRRQw/exec"; // ★ここに最新のURLを貼ってください
+        const ADMIN_PASSWORD = "admin123";
+        let currentRows = [];
 
         window.onload = async () => {
-            const pass = prompt("パスワードを入力してください");
-            if(pass !== "admin123") { alert("認証失敗"); location.href="index.html"; return; }
+            const pass = prompt("管理者パスワードを入力してください");
+            if(pass !== ADMIN_PASSWORD) { alert("認証失敗"); location.href="index.html"; return; }
             
-            const res = await fetch(`${GAS_URL}?action=getSheets`);
-            const sheets = await res.json();
-            const select = document.getElementById('sheetSelect');
-            sheets.forEach(s => select.innerHTML += `<option value="${s}">${s}</option>`);
+            try {
+                const res = await fetch(`${GAS_URL}?action=getSheets`);
+                const sheets = await res.json();
+                const select = document.getElementById('sheetSelect');
+                sheets.forEach(s => select.innerHTML += `<option value="${s}">${s}</option>`);
+            } catch (e) {
+                alert("シート一覧の取得に失敗しました。");
+            }
         };
 
         async function loadData() {
             const sheetName = document.getElementById('sheetSelect').value;
-            const res = await fetch(`${GAS_URL}?action=getData&sheetName=${encodeURIComponent(sheetName)}`);
-            const data = await res.json();
-            currentRows = data.rows;
-            renderTable(data.rows);
+            if(!sheetName) return;
+
+            const btn = document.querySelector('button[onclick="loadData()"]');
+            btn.innerText = "読込中...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${GAS_URL}?action=getData&sheetName=${encodeURIComponent(sheetName)}`);
+                const data = await res.json();
+                currentRows = data.rows;
+                
+                // URLの自動生成と表示
+                updateEventUrl(sheetName);
+                renderTable(data.rows);
+            } catch (e) {
+                alert("データの取得に失敗しました。");
+            } finally {
+                btn.innerText = "読込";
+                btn.disabled = false;
+            }
+        }
+
+        // URL生成機能
+        function updateEventUrl(sheetName) {
+            const currentHref = window.location.href;
+            const directoryPath = currentHref.substring(0, currentHref.lastIndexOf('/'));
+            const finalUrl = `${directoryPath}/index.html?event=${encodeURIComponent(sheetName)}`;
+            
+            document.getElementById('eventUrl').value = finalUrl;
+            document.getElementById('urlDisplayArea').classList.remove('hidden');
+        }
+
+        function copyEventUrl() {
+            const urlInput = document.getElementById('eventUrl');
+            urlInput.select();
+            document.execCommand('copy');
+            alert("案内用URLをコピーしました！");
         }
 
         function renderTable(rows) {
             const tbody = document.getElementById('dataTable');
             tbody.innerHTML = "";
             
-            // 「送迎：可」の人リストを作成（プルダウン用）
+            // 「送迎：可」の人リストを作成
             const drivers = rows.filter(r => r[3] === "可").map(r => r[1]);
             
-            // 集計
-            let attCount = 0, pickupCap = 0;
+            let attCount = 0;
+            let pickupCap = 0;
             
             rows.forEach((row, index) => {
-                if(row[2] === "参加") attCount++;
+                const isAttending = row[2] === "参加";
+                if(isAttending) attCount++;
                 if(row[3] === "可") pickupCap += Number(row[4] || 0);
 
                 const tr = document.createElement('tr');
-                tr.className = row[2] === "不参加" ? "bg-red-50 text-gray-400" : "hover:bg-blue-50";
+                tr.className = !isAttending ? "bg-red-50 text-gray-400" : "hover:bg-blue-50 transition";
                 
-                // 配車選択プルダウン
                 let options = `<option value="">--未定--</option>`;
                 drivers.forEach(d => {
                     options += `<option value="${d}" ${row[7] === d ? 'selected' : ''}>${d}の車</option>`;
                 });
 
                 tr.innerHTML = `
-                    <td class="p-3 border">${row[0]}</td>
-                    <td class="p-3 border font-bold text-gray-800">${row[1]}</td>
-                    <td class="p-3 border text-center">${row[2]}</td>
-                    <td class="p-3 border">${row[3]} (${row[4]}人)</td>
-                    <td class="p-3 border text-xs text-gray-500 max-w-[150px] truncate" title="${row[8]}">${row[8] || ""}</td>
-                    <td class="p-3 border bg-yellow-50">
-                        <select onchange="updateLocalData(${index}, 7, this.value)" class="w-full p-1 border rounded bg-white">
+                    <td class="p-4 border-b border-gray-100">${row[0]}</td>
+                    <td class="p-4 border-b border-gray-100 font-bold text-gray-800">${row[1]}</td>
+                    <td class="p-4 border-b border-gray-100 text-center">${row[2]}</td>
+                    <td class="p-4 border-b border-gray-100 text-center">${row[3]}${row[3]==="可" ? `(${row[4]})` : ""}</td>
+                    <td class="p-4 border-b border-gray-100 text-xs text-gray-500 max-w-[200px] truncate" title="${row[8]}">${row[8] || ""}</td>
+                    <td class="p-4 border-b border-gray-100 bg-yellow-50">
+                        <select onchange="updateLocalData(${index}, 7, this.value)" class="w-full p-2 border border-gray-300 rounded-lg bg-white font-medium shadow-sm focus:border-blue-500 outline-none">
                             ${options}
                         </select>
                     </td>
@@ -98,8 +152,8 @@
             });
 
             document.getElementById('summary').innerHTML = `
-                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500"><p class="text-xs text-gray-500">参加者</p><p class="text-xl font-bold">${attCount}名</p></div>
-                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500"><p class="text-xs text-gray-500">送迎キャパ</p><p class="text-xl font-bold">${pickupCap}名</p></div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border-l-8 border-blue-500"><p class="text-[10px] text-gray-500 font-bold uppercase">参加人数</p><p class="text-2xl font-black text-blue-700">${attCount}<span class="text-sm ml-1 font-normal text-gray-400">名</span></p></div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border-l-8 border-green-500"><p class="text-[10px] text-gray-500 font-bold uppercase">総送迎可能数</p><p class="text-2xl font-black text-green-700">${pickupCap}<span class="text-sm ml-1 font-normal text-gray-400">名</span></p></div>
             `;
         }
 
@@ -111,15 +165,20 @@
             const btn = document.getElementById('saveBtn');
             btn.disabled = true; btn.innerText = "保存中...";
             
-            const payload = {
-                type: "updateData",
-                eventName: document.getElementById('sheetSelect').value,
-                rows: currentRows
-            };
+            try {
+                const payload = {
+                    type: "updateData",
+                    eventName: document.getElementById('sheetSelect').value,
+                    rows: currentRows
+                };
 
-            await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("スプレッドシートに保存しました！");
-            btn.disabled = false; btn.innerText = "配車情報を保存する";
+                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                alert("スプレッドシートのデータを更新しました！");
+            } catch (e) {
+                alert("保存に失敗しました。");
+            } finally {
+                btn.disabled = false; btn.innerText = "配車情報を保存する";
+            }
         }
     </script>
 </body>
