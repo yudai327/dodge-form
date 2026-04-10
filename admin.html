@@ -35,7 +35,7 @@
         </div>
     </div>
 
-    <script>
+<script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxAikiWUWIPGr2YrNpUa__MYISZtabOBjiCjBZ6ntIuzWqy4ePNN50680K0l0tWCe8f4g/exec"; 
 
         async function createNewEvent() {
@@ -52,16 +52,20 @@
             resultArea.classList.add('hidden');
 
             try {
+                // GASへ送信
                 await fetch(GAS_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     body: JSON.stringify({ type: "createEvent", eventName: name })
                 });
 
-                // URL生成ロジック
-                let currentUrl = window.location.href;
-                let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
-                const finalUrl = `${baseUrl}index.html?event=${encodeURIComponent(name)}`;
+                // --- URL生成ロジックをより確実に修正 ---
+                // 現在のURL（.../admin.html）から最後のスラッシュ以降を削る
+                const currentHref = window.location.href;
+                const directoryPath = currentHref.substring(0, currentHref.lastIndexOf('/'));
+                
+                // ディレクトリパスに /index.html を付け足す
+                const finalUrl = `${directoryPath}/index.html?event=${encodeURIComponent(name)}`;
                 
                 inviteUrlInput.value = finalUrl;
                 resultArea.classList.remove('hidden');
@@ -78,6 +82,7 @@
         function copyUrl() {
             const urlText = document.getElementById('inviteUrl');
             urlText.select();
+            urlText.setSelectionRange(0, 99999); // スマホ用
             document.execCommand('copy');
             alert("コピーしました！LINEなどで送ってください。");
         }
