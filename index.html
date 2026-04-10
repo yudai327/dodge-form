@@ -5,7 +5,14 @@
     <title>参加回答</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .btn-radio:checked + label { border-color: #3b82f6; background-color: #eff6ff; color: #1d4ed8; font-weight: bold; }
+        /* ボタン選択時のスタイル */
+        .btn-radio:checked + label { 
+            border-color: #3b82f6; 
+            background-color: #eff6ff; 
+            color: #1d4ed8; 
+            font-weight: bold; 
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
     </style>
 </head>
 <body class="bg-slate-50 p-4 pb-12">
@@ -23,13 +30,13 @@
             <div class="grid grid-cols-5 gap-3">
                 <div class="col-span-2">
                     <label class="block text-sm font-bold text-gray-600 mb-1 ml-1">学年</label>
-                    <select id="grade" class="w-full border-2 border-gray-100 p-4 rounded-xl text-lg bg-white outline-none focus:border-blue-400">
+                    <select id="grade" class="w-full border-2 border-gray-100 p-4 rounded-xl text-lg bg-white outline-none focus:border-blue-400 font-bold">
                         <option>1年</option><option>2年</option><option>3年</option><option>4年</option><option>5年</option><option>6年</option>
                     </select>
                 </div>
                 <div class="col-span-3">
                     <label class="block text-sm font-bold text-gray-600 mb-1 ml-1">名前</label>
-                    <input type="text" id="name" required placeholder="氏名を入力" class="w-full border-2 border-gray-100 p-4 rounded-xl text-lg outline-none focus:border-blue-400 bg-white">
+                    <input type="text" id="name" required placeholder="氏名を入力" class="w-full border-2 border-gray-100 p-4 rounded-xl text-lg outline-none focus:border-blue-400 bg-white font-bold">
                 </div>
             </div>
 
@@ -79,7 +86,7 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUiiynEDBvBNe5o7PrhMcCwFypBvrRosmuLaC3vJPM2KCpX6ZLMupBJwlH-SZIj8VO_w/exec"; // ★ここにGASのURLを貼ってください
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUiiynEDBvBNe5o7PrhMcCwFypBvrRosmuLaC3vJPM2KCpX6ZLMupBJwlH-SZIj8VO_w/exec"; // ★ここに最新のデプロイURLを貼り付けてください
 
         window.onload = async () => {
             const select = document.getElementById('eventName');
