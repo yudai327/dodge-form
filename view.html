@@ -8,22 +8,23 @@
 <body class="bg-gray-50 p-4 pb-32">
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-bold">📊 配車管理</h1>
+            <h1 class="text-xl font-bold">📊 配車管理（学年別）</h1>
             <div class="flex gap-2">
-                <select id="sheetSelect" class="border p-2 rounded-lg bg-white"></select>
+                <select id="sheetSelect" class="border p-2 rounded-lg bg-white font-bold"></select>
                 <button onclick="loadData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">読込</button>
             </div>
         </div>
 
         <div class="bg-white rounded-xl shadow-lg overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[1000px]">
+            <table class="w-full text-left border-collapse min-w-[1100px]">
                 <thead>
                     <tr class="bg-slate-800 text-white text-[10px]">
+                        <th class="p-3 border-r border-slate-700 w-16">学年</th>
                         <th class="p-3 border-r border-slate-700">名前</th>
                         <th class="p-3 border-r border-slate-700 text-center">参加</th>
                         <th class="p-3 border-r border-slate-700 bg-blue-900">自車(空き) / 確定</th>
                         <th class="p-3 border-r border-slate-700 bg-orange-900">他車(希望) / 配車メモ</th>
-                        <th class="p-3">備考 (自由編集)</th>
+                        <th class="p-3">備考 (上書き・編集用)</th>
                     </tr>
                 </thead>
                 <tbody id="dataTable" class="text-xs"></tbody>
@@ -34,7 +35,7 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyI-wxjhiMhzOWtwVNYXtu9an6vQN5N-X0vGGoGlpy-h7_KTd2kJ6xN3G603PkHMFhKhg/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycby2g7nK_cj3P8gYvq1eGK5LtZbOAVJeCEVQh1si21zUZoBibv1GrQyzmfXqCC8UhU1mvg/exec"; // ★差し替え
         const ADMIN_PASSWORD = "admin123";
         let currentRows = [];
 
@@ -49,6 +50,7 @@
 
         async function loadData() {
             const name = document.getElementById('sheetSelect').value;
+            if(!name) return;
             const res = await fetch(`${GAS_URL}?action=getData&sheetName=${encodeURIComponent(name)}`);
             const data = await res.json();
             currentRows = data.rows;
@@ -57,21 +59,25 @@
 
         function renderTable(rows) {
             const tbody = document.getElementById('dataTable');
+            // row[0]:学年, row[1]:名前, row[2]:参加, row[3]:自車可否, row[4]:空き, row[5]:他車希望, row[6]:人数, row[7]:メモ, row[8]:備考
             tbody.innerHTML = rows.map((row, i) => `
                 <tr class="${row[2]==='参加' ? '' : 'bg-red-50 opacity-50'} border-b">
-                    <td class="p-3 font-bold">${row[1]}</td>
-                    <td class="p-3 text-center">${row[2]}</td>
-                    <td class="p-3 bg-blue-50 flex items-center justify-between">
+                    <td class="p-3 border-r">${row[0]}</td>
+                    <td class="p-3 font-bold border-r">${row[1]}</td>
+                    <td class="p-3 text-center border-r">${row[2]}</td>
+                    <td class="p-3 bg-blue-50 border-r flex items-center justify-between min-w-[120px]">
                         <span>${row[3]==='可' ? `空き:${row[4]}` : '-'}</span>
                         <input type="checkbox" ${row[3]==='可' ? 'checked' : ''} onchange="currentRows[${i}][3]=this.checked?'可':'不可'" class="w-4 h-4">
                     </td>
-                    <td class="p-3 bg-orange-50">
+                    <td class="p-3 bg-orange-50 border-r">
                         <div class="flex flex-col gap-1">
                             <span class="text-[10px] font-bold text-orange-700">${row[5]==='可' ? `希望:${row[6]}名` : ''}</span>
                             <input type="text" value="${row[7]||''}" oninput="currentRows[${i}][7]=this.value" class="w-full p-1 border rounded" placeholder="配車先...">
                         </div>
                     </td>
-                    <td class="p-1"><textarea oninput="currentRows[${i}][8]=this.value" class="w-full p-2 border rounded h-10">${row[8]||''}</textarea></td>
+                    <td class="p-1">
+                        <textarea oninput="currentRows[${i}][8]=this.value" class="w-full p-2 border rounded h-10" placeholder="空欄">${row[8]||''}</textarea>
+                    </td>
                 </tr>
             `).join('');
         }
@@ -80,8 +86,16 @@
             const name = document.getElementById('sheetSelect').value;
             const btn = document.getElementById('saveBtn');
             btn.innerText = "保存中...";
-            await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "updateData", eventName: name, rows: currentRows }) });
-            alert(`「【結果】${name}」として保存しました！`);
+            try {
+                await fetch(GAS_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify({ type: "updateData", eventName: name, rows: currentRows }) 
+                });
+                alert(`「【結果】${name}」として保存しました。`);
+            } catch(e) {
+                alert("保存に失敗しました。");
+            }
             btn.innerText = "【結果】として保存";
         }
     </script>
