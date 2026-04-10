@@ -2,46 +2,50 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>集計・配車</title>
+    <title>配車管理システム</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 p-4 pb-32">
+<body class="bg-gray-100 p-4 pb-32">
     <div class="max-w-6xl mx-auto">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-xl font-bold">📊 配車管理（学年別）</h1>
+            <h1 class="text-xl font-bold text-gray-800">📊 配車管理（学年別）</h1>
             <div class="flex gap-2">
-                <select id="sheetSelect" class="border p-2 rounded-lg bg-white font-bold"></select>
-                <button onclick="loadData()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">読込</button>
+                <select id="sheetSelect" class="border-2 border-blue-200 p-2 rounded-lg bg-white font-bold"></select>
+                <button onclick="loadData()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow-md active:scale-95">読込</button>
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg overflow-x-auto">
+        <div class="bg-white rounded-2xl shadow-xl overflow-x-auto border border-gray-200">
             <table class="w-full text-left border-collapse min-w-[1100px]">
                 <thead>
-                    <tr class="bg-slate-800 text-white text-[10px]">
-                        <th class="p-3 border-r border-slate-700 w-16">学年</th>
-                        <th class="p-3 border-r border-slate-700">名前</th>
-                        <th class="p-3 border-r border-slate-700 text-center">参加</th>
-                        <th class="p-3 border-r border-slate-700 bg-blue-900">自車(空き) / 確定</th>
-                        <th class="p-3 border-r border-slate-700 bg-orange-900">他車(希望) / 配車メモ</th>
-                        <th class="p-3">備考 (上書き・編集用)</th>
+                    <tr class="bg-slate-800 text-white text-[11px] uppercase tracking-wider">
+                        <th class="p-4 border-r border-slate-700 w-20">学年</th>
+                        <th class="p-4 border-r border-slate-700">名前</th>
+                        <th class="p-4 border-r border-slate-700 text-center w-24">参加</th>
+                        <th class="p-4 border-r border-slate-700 bg-blue-900 w-44">自車(空き) / 確定</th>
+                        <th class="p-4 border-r border-slate-700 bg-orange-900 w-56">他車(希望) / 配車メモ</th>
+                        <th class="p-4">備考 (上書き・編集用)</th>
                     </tr>
                 </thead>
-                <tbody id="dataTable" class="text-xs"></tbody>
+                <tbody id="dataTable" class="text-xs font-medium text-gray-700"></tbody>
             </table>
         </div>
 
-        <button onclick="saveChanges()" id="saveBtn" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-12 py-4 rounded-full font-bold shadow-2xl active:scale-95 text-lg">【結果】として保存</button>
+        <div class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md">
+            <button onclick="saveChanges()" id="saveBtn" class="w-full bg-green-600 text-white py-5 rounded-3xl font-black shadow-2xl hover:bg-green-700 transition active:scale-95 text-lg border-b-4 border-green-800">
+                表示内容を【結果】として保存
+            </button>
+        </div>
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbx1LiWNdWtKYzMjV1fRevtttVHD4A-cZYnO6Tsv5oqHHJm-hlyu5vn0viDTBfWAWgrOlg/exec"; // ★ここに最新のURLを貼ってください
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyThRaAvgBfYrvRNcbOfOTc4m5Rrgd4FoFNBY8qecgz_ubGzr3zvqUSe_4If74FWFbwEA/exec"; // ★要差し替え
         const ADMIN_PASSWORD = "admin123";
         let currentRows = [];
 
         window.onload = async () => {
-            const pass = prompt("Password?");
-            if(pass !== ADMIN_PASSWORD) location.href="index.html";
+            const pass = prompt("管理者パスワードを入力");
+            if(pass !== ADMIN_PASSWORD) { alert("認証失敗"); location.href="index.html"; return; }
             const res = await fetch(`${GAS_URL}?action=getSheets`);
             const sheets = await res.json();
             const select = document.getElementById('sheetSelect');
@@ -57,61 +61,62 @@
             renderTable(data.rows);
         }
 
+        function isDateString(val) {
+            if (!val || typeof val !== 'string') return false;
+            return val.includes('T') && val.includes('Z') && !isNaN(Date.parse(val));
+        }
+
         function renderTable(rows) {
             const tbody = document.getElementById('dataTable');
-            // GAS側の列定義と完全一致
-            // 0:学年, 1:名前, 2:参加, 3:自車可否, 4:自車空き, 5:他車希望可否, 6:希望人数, 7:他車配車メモ, 8:備考, 9:登録日時
-            tbody.innerHTML = rows.map((row, i) => `
-                <tr class="${row[2]==='参加' ? '' : 'bg-red-50 opacity-50'} border-b">
-                    <td class="p-3 border-r">${row[0]}</td>
-                    <td class="p-3 font-bold border-r">${row[1]}</td>
-                    <td class="p-3 text-center border-r">${row[2]}</td>
-                    
-                    <td class="p-3 bg-blue-50 border-r min-w-[120px]">
+            tbody.innerHTML = rows.map((row, i) => {
+                const isAttending = row[2] === '参加';
+                
+                // 日付データの混入をガード（日付なら空文字にする）
+                let memoValue = isDateString(row[7]) ? "" : (row[7] || "");
+                let noteValue = isDateString(row[8]) ? "" : (row[8] || "");
+
+                return `
+                <tr class="${isAttending ? '' : 'bg-red-50 opacity-50'} border-b border-gray-100 hover:bg-gray-50">
+                    <td class="p-4 border-r">${row[0]}</td>
+                    <td class="p-4 font-bold border-r text-gray-900">${row[1]}</td>
+                    <td class="p-4 text-center border-r font-bold">${row[2]}</td>
+                    <td class="p-4 bg-blue-50/50 border-r">
                         <div class="flex items-center justify-between">
-                            <span>${row[3]==='可' ? `空き:${row[4]}` : '-'}</span>
+                            <span class="font-bold text-blue-700">${row[3]==='可' ? `空き:${row[4]}` : '-'}</span>
                             <input type="checkbox" ${row[3]==='可' ? 'checked' : ''} 
-                                onchange="currentRows[${i}][3]=this.checked?'可':'不可'" class="w-4 h-4 accent-blue-600">
+                                onchange="currentRows[${i}][3]=this.checked?'可':'不可'" class="w-5 h-5 accent-blue-600">
                         </div>
                     </td>
-                    
-                    <td class="p-3 bg-orange-50 border-r">
+                    <td class="p-4 bg-orange-50/50 border-r">
                         <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-orange-700">
-                                ${row[5]==='可' ? `希望:${row[6]}名` : ''}
-                            </span>
-                            <input type="text" value="${row[7]||''}" 
+                            <span class="text-[10px] font-bold text-orange-700">${row[5]==='可' ? `希望:${row[6]}名` : ''}</span>
+                            <input type="text" value="${memoValue}" 
                                 oninput="currentRows[${i}][7]=this.value" 
-                                class="w-full p-1 border rounded shadow-sm focus:border-orange-500 outline-none" 
-                                placeholder="配車先を入力">
+                                class="w-full p-2 border rounded shadow-sm outline-none focus:border-orange-500" placeholder="配車先...">
                         </div>
                     </td>
-                    
-                    <td class="p-1">
+                    <td class="p-2">
                         <textarea oninput="currentRows[${i}][8]=this.value" 
-                            class="w-full p-2 border rounded h-10 shadow-sm focus:border-blue-500 outline-none" 
-                            placeholder="備考を入力">${row[8]||''}</textarea>
+                            class="w-full p-2 border rounded h-12 shadow-sm outline-none focus:border-blue-500" placeholder="備考">${noteValue}</textarea>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
         }
 
         async function saveChanges() {
             const name = document.getElementById('sheetSelect').value;
             const btn = document.getElementById('saveBtn');
-            btn.innerText = "保存中...";
+            btn.disabled = true; btn.innerText = "保存中...";
             try {
-                // 保存対象(currentRows)はヘッダーを除く全データ(10列分)
                 await fetch(GAS_URL, { 
                     method: 'POST', 
                     mode: 'no-cors', 
                     body: JSON.stringify({ type: "updateData", eventName: name, rows: currentRows }) 
                 });
-                alert(`「【結果】${name}」として別シートに保存しました！`);
-            } catch(e) {
-                alert("保存に失敗しました。");
-            }
-            btn.innerText = "【結果】として保存";
+                alert("保存しました。");
+                location.reload(); 
+            } catch(e) { alert("エラーが発生しました。"); }
+            btn.disabled = false; btn.innerText = "表示内容を【結果】として保存";
         }
     </script>
 </body>
