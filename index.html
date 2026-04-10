@@ -1,38 +1,119 @@
-<form id="myForm">
-  <input type="text" id="name" placeholder="お名前" required>
-  <input type="email" id="email" placeholder="メールアドレス" required>
-  <textarea id="message" placeholder="メッセージ"></textarea>
-  <button type="submit">送信</button>
-</form>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>イベント参加回答</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 p-4">
+    <div class="max-w-lg mx-auto bg-white rounded-2xl shadow-lg p-6">
+        <h1 class="text-2xl font-bold text-blue-600 mb-2">参加確認アンケート</h1>
+        <p class="text-sm text-gray-500 mb-8 border-b pb-4">以下の項目を入力して送信してください。</p>
 
-<script>
-  const url = "https://script.google.com/macros/s/AKfycbx9HgS4hTEW3ukueEUzXR8FjuNEb7xxN8NRdKiZMxZkHz0NSwwHUtHdiYXoDgp8xygQhA/exec";
+        <form id="ansForm" class="space-y-5">
+            <div>
+                <label class="block text-sm font-bold text-gray-700">対象イベント</label>
+                <input type="text" id="eventName" value="2026年5月 練習試合" readonly
+                    class="mt-1 block w-full bg-gray-100 border-none rounded-md p-2 text-gray-600">
+            </div>
 
-  document.getElementById('myForm').addEventListener('submit', function(e) {
-    e.preventDefault();
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700">① 学年</label>
+                    <select id="grade" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2">
+                        <option>1年</option><option>2年</option><option>3年</option>
+                        <option>4年</option><option>5年</option><option>6年</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-gray-700">② 名前</label>
+                    <input type="text" id="name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2">
+                </div>
+            </div>
 
-    const data = {
-      name: document.getElementById('name').value,
-      email: document.getElementById('email').value,
-      message: document.getElementById('message').value
-    };
+            <div>
+                <label class="block text-sm font-bold text-gray-700">③ 参加の可否</label>
+                <div class="mt-2 space-x-4">
+                    <label><input type="radio" name="attendance" value="参加" checked> 参加</label>
+                    <label><input type="radio" name="attendance" value="不参加"> 不参加</label>
+                </div>
+            </div>
 
-    // fetchのオプションを変更
-    fetch(url, {
-      method: 'POST',
-      mode: 'no-cors', // CORSエラーを強制的に無視するモード
-      headers: {
-        'Content-Type': 'text/plain', // あえてJSONではなくテキストとして送る（GASの制限回避）
-      },
-      body: JSON.stringify(data)
-    })
-    .then(() => {
-      // no-corsモードではレスポンスが取れないため、成否に関わらずここに来る
-      alert('送信処理を実行しました。スプレッドシートを確認してください！');
-      document.getElementById('myForm').reset();
-    })
-    .catch(error => {
-      alert('通信エラーが発生しました: ' + error.message);
-    });
-  });
-</script>
+            <div class="bg-blue-50 p-4 rounded-xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-bold text-gray-700">④ 送迎の可否</label>
+                    <select id="pickup" class="border-gray-300 rounded-md border p-1">
+                        <option value="不可">不可</option><option value="可">可</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500">可の場合の人数</label>
+                    <input type="number" id="pickupCount" value="0" class="w-20 border-gray-300 rounded-md border p-1 ml-2">
+                </div>
+            </div>
+
+            <div class="bg-green-50 p-4 rounded-xl space-y-4">
+                <div class="flex items-center justify-between">
+                    <label class="text-sm font-bold text-gray-700">⑤ 乗り合わせの可否</label>
+                    <select id="carpool" class="border-gray-300 rounded-md border p-1">
+                        <option value="不可">不可</option><option value="可">可</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500">可の場合の人数</label>
+                    <input type="number" id="carpoolCount" value="0" class="w-20 border-gray-300 rounded-md border p-1 ml-2">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-bold text-gray-700">⑥ 備考</label>
+                <textarea id="note" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2" rows="2"></textarea>
+            </div>
+
+            <button type="submit" id="submitBtn"
+                class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-2xl hover:bg-blue-700 shadow-lg transition">
+                回答を送信する
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxAikiWUWIPGr2YrNpUa__MYISZtabOBjiCjBZ6ntIuzWqy4ePNN50680K0l0tWCe8f4g/exec";
+
+        document.getElementById('ansForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "送信中...";
+
+            const data = {
+                eventName: document.getElementById('eventName').value,
+                grade: document.getElementById('grade').value,
+                name: document.getElementById('name').value,
+                attendance: document.querySelector('input[name="attendance"]:checked').value,
+                pickup: document.getElementById('pickup').value,
+                pickupCount: document.getElementById('pickupCount').value,
+                carpool: document.getElementById('carpool').value,
+                carpoolCount: document.getElementById('carpoolCount').value,
+                note: document.getElementById('note').value
+            };
+
+            try {
+                await fetch(GAS_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(data)
+                });
+                alert("送信が完了しました！");
+                document.getElementById('ansForm').reset();
+            } catch (e) {
+                alert("送信エラーが発生しました");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "回答を送信する";
+            }
+        });
+    </script>
+</body>
+</html>
