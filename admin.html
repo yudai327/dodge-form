@@ -7,31 +7,41 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4">
-    <div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-6">
-        <h1 class="text-xl font-bold text-gray-800 mb-4">🛠 イベント新規作成</h1>
-        <p class="text-sm text-gray-500 mb-6">作成するとスプレッドシートに新しいシートが追加されます。</p>
+    <div class="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
+        <h1 class="text-xl font-bold text-gray-800 mb-2">🛠 イベント新規作成</h1>
+        <p class="text-xs text-gray-500 mb-6 border-b pb-4">作成するとスプレッドシートに新しいシートが自動追加されます。</p>
         
-        <div class="space-y-4">
+        <div class="space-y-6">
             <div>
-                <label class="block text-sm font-medium text-gray-700">イベント名</label>
-                <input type="text" id="eventName" placeholder="例：2026年5月 練習試合" 
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                <label class="block text-sm font-bold text-gray-700">新しいイベント名</label>
+                <input type="text" id="eventName" placeholder="例：4月20日 練習試合" 
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 border p-3">
             </div>
+            
             <button onclick="createNewEvent()" id="btn"
-                class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
-                シートを作成する
+                class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition shadow-md">
+                シートを作成してURLを発行
             </button>
+
+            <div id="resultArea" class="hidden mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p class="text-xs font-bold text-yellow-800 mb-2">案内用URLが作成されました：</p>
+                <textarea id="inviteUrl" readonly class="w-full text-xs p-2 border border-yellow-300 bg-white rounded mb-2 h-20"></textarea>
+                <button onclick="copyUrl()" class="text-xs bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700">URLをコピー</button>
+            </div>
+        </div>
+        
+        <div class="mt-10 text-center">
+            <a href="index.html" class="text-blue-500 text-sm hover:underline">← フォーム画面へ戻る</a>
         </div>
     </div>
 
     <script>
-        // ここをあなたの最新のURLに差し替えてください
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxAikiWUWIPGr2YrNpUa__MYISZtabOBjiCjBZ6ntIuzWqy4ePNN50680K0l0tWCe8f4g/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxAikiWUWIPGr2YrNpUa__MYISZtabOBjiCjBZ6ntIuzWqy4ePNN50680K0l0tWCe8f4g/exec"; // 貼り直してください
 
-        // 関数名を変更
         async function createNewEvent() {
-            const name = document.getElementById('eventName').value;
-            if(!name) return alert("イベント名を入力してください");
+            const nameInput = document.getElementById('eventName');
+            const name = nameInput.value.trim();
+            if(!name) return alert("名前を入力してください");
             
             const btn = document.getElementById('btn');
             btn.disabled = true;
@@ -43,14 +53,28 @@
                     mode: 'no-cors',
                     body: JSON.stringify({ type: "createEvent", eventName: name })
                 });
-                alert("作成リクエストを送信しました！スプレッドシートを確認してください。");
-                document.getElementById('eventName').value = "";
+
+                // 案内用URLの生成
+                const baseUrl = window.location.href.split('admin.html')[0];
+                const inviteUrl = `${baseUrl}index.html?event=${encodeURIComponent(name)}`;
+                
+                document.getElementById('resultArea').classList.remove('hidden');
+                document.getElementById('inviteUrl').value = inviteUrl;
+                
+                alert("シートの作成依頼を送りました！");
             } catch (e) {
-                alert("エラーが発生しました: " + e.message);
+                alert("エラーが発生しました");
             } finally {
                 btn.disabled = false;
-                btn.innerText = "シートを作成する";
+                btn.innerText = "シートを作成してURLを発行";
             }
+        }
+
+        function copyUrl() {
+            const urlText = document.getElementById('inviteUrl');
+            urlText.select();
+            document.execCommand('copy');
+            alert("クリップボードにコピーしました！これをLINEなどで送ってください。");
         }
     </script>
 </body>
