@@ -5,7 +5,6 @@
     <title>参加回答</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* ボタン選択時のスタイル */
         .btn-radio:checked + label { 
             border-color: #3b82f6; 
             background-color: #eff6ff; 
@@ -17,7 +16,7 @@
 </head>
 <body class="bg-slate-50 p-4 pb-12">
     <div class="max-w-lg mx-auto bg-white rounded-3xl shadow-xl p-6 border border-gray-100">
-        <h1 class="text-2xl font-bold text-blue-700 mb-6 border-b pb-4 flex items-center gap-2">
+        <h1 class="text-2xl font-bold text-blue-700 mb-6 border-b pb-4 flex items-center gap-2 cursor-pointer" onclick="location.href='admin.html'">
             <span>📝</span> 参加確認アンケート
         </h1>
         
@@ -30,13 +29,13 @@
             <div class="grid grid-cols-5 gap-3">
                 <div class="col-span-2">
                     <label class="block text-sm font-bold text-gray-600 mb-1 ml-1">学年</label>
-                    <select id="grade" class="w-full border-2 border-gray-100 p-4 rounded-xl text-lg bg-white outline-none focus:border-blue-400 font-bold">
+                    <select id="grade" class="w-full border-2 border-gray-100 p-4 rounded-xl text-lg bg-white font-bold">
                         <option>1年</option><option>2年</option><option>3年</option><option>4年</option><option>5年</option><option>6年</option>
                     </select>
                 </div>
                 <div class="col-span-3">
                     <label class="block text-sm font-bold text-gray-600 mb-1 ml-1">名前</label>
-                    <input type="text" id="name" required placeholder="氏名を入力" class="w-full border-2 border-gray-100 p-4 rounded-xl text-lg outline-none focus:border-blue-400 bg-white font-bold">
+                    <input type="text" id="name" required placeholder="氏名を入力" class="w-full border-2 border-gray-100 p-4 rounded-xl text-lg outline-none focus:border-blue-400 font-bold bg-white">
                 </div>
             </div>
 
@@ -86,16 +85,14 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUiiynEDBvBNe5o7PrhMcCwFypBvrRosmuLaC3vJPM2KCpX6ZLMupBJwlH-SZIj8VO_w/exec"; // ★ここに最新のデプロイURLを貼り付けてください
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUiiynEDBvBNe5o7PrhMcCwFypBvrRosmuLaC3vJPM2KCpX6ZLMupBJwlH-SZIj8VO_w/exec"; // ★必ず最新のURLに差し替えてください
 
         window.onload = async () => {
             const select = document.getElementById('eventName');
             const eventParam = new URLSearchParams(window.location.search).get('event');
-            
             try {
                 const res = await fetch(`${GAS_URL}?action=getSheets`);
                 const sheets = await res.json();
-                
                 sheets.forEach(s => {
                     if(!s.includes("【結果】")) {
                         const opt = new Option(s, s);
@@ -103,17 +100,13 @@
                         select.add(opt);
                     }
                 });
-            } catch(e) {
-                console.error("データの読み込みに失敗しました");
-            }
+            } catch(e) { console.error(e); }
         };
 
         document.getElementById('ansForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; 
-            btn.innerText = "送信中...";
-
+            btn.disabled = true; btn.innerText = "送信中...";
             const data = {
                 eventName: document.getElementById('eventName').value,
                 grade: document.getElementById('grade').value,
@@ -125,19 +118,13 @@
                 carpoolCount: document.getElementById('carpoolCount').value,
                 note: document.getElementById('note').value
             };
-
             try {
-                await fetch(GAS_URL, { 
-                    method: 'POST', 
-                    mode: 'no-cors', 
-                    body: JSON.stringify(data) 
-                });
+                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(data) });
                 alert("送信が完了しました！");
                 location.reload();
             } catch(e) {
-                alert("送信エラーが発生しました。");
-                btn.disabled = false;
-                btn.innerText = "回答を送信する";
+                alert("送信エラー");
+                btn.disabled = false; btn.innerText = "回答を送信する";
             }
         });
     </script>
