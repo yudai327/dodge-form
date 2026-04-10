@@ -35,7 +35,7 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycby2g7nK_cj3P8gYvq1eGK5LtZbOAVJeCEVQh1si21zUZoBibv1GrQyzmfXqCC8UhU1mvg/exec"; // ★差し替え
+        const GAS_URL = "https://script.google.com/macros/s/AKfycby2g7nK_cj3P8gYvq1eGK5LtZbOAVJeCEVQh1si21zUZoBibv1GrQyzmfXqCC8UhU1mvg/exec"; // ★ここに最新のURLを貼ってください
         const ADMIN_PASSWORD = "admin123";
         let currentRows = [];
 
@@ -59,24 +59,38 @@
 
         function renderTable(rows) {
             const tbody = document.getElementById('dataTable');
-            // row[0]:学年, row[1]:名前, row[2]:参加, row[3]:自車可否, row[4]:空き, row[5]:他車希望, row[6]:人数, row[7]:メモ, row[8]:備考
+            // GAS側の列定義と完全一致
+            // 0:学年, 1:名前, 2:参加, 3:自車可否, 4:自車空き, 5:他車希望可否, 6:希望人数, 7:他車配車メモ, 8:備考, 9:登録日時
             tbody.innerHTML = rows.map((row, i) => `
                 <tr class="${row[2]==='参加' ? '' : 'bg-red-50 opacity-50'} border-b">
                     <td class="p-3 border-r">${row[0]}</td>
                     <td class="p-3 font-bold border-r">${row[1]}</td>
                     <td class="p-3 text-center border-r">${row[2]}</td>
-                    <td class="p-3 bg-blue-50 border-r flex items-center justify-between min-w-[120px]">
-                        <span>${row[3]==='可' ? `空き:${row[4]}` : '-'}</span>
-                        <input type="checkbox" ${row[3]==='可' ? 'checked' : ''} onchange="currentRows[${i}][3]=this.checked?'可':'不可'" class="w-4 h-4">
-                    </td>
-                    <td class="p-3 bg-orange-50 border-r">
-                        <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-orange-700">${row[5]==='可' ? `希望:${row[6]}名` : ''}</span>
-                            <input type="text" value="${row[7]||''}" oninput="currentRows[${i}][7]=this.value" class="w-full p-1 border rounded" placeholder="配車先...">
+                    
+                    <td class="p-3 bg-blue-50 border-r min-w-[120px]">
+                        <div class="flex items-center justify-between">
+                            <span>${row[3]==='可' ? `空き:${row[4]}` : '-'}</span>
+                            <input type="checkbox" ${row[3]==='可' ? 'checked' : ''} 
+                                onchange="currentRows[${i}][3]=this.checked?'可':'不可'" class="w-4 h-4 accent-blue-600">
                         </div>
                     </td>
+                    
+                    <td class="p-3 bg-orange-50 border-r">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-bold text-orange-700">
+                                ${row[5]==='可' ? `希望:${row[6]}名` : ''}
+                            </span>
+                            <input type="text" value="${row[7]||''}" 
+                                oninput="currentRows[${i}][7]=this.value" 
+                                class="w-full p-1 border rounded shadow-sm focus:border-orange-500 outline-none" 
+                                placeholder="配車先を入力">
+                        </div>
+                    </td>
+                    
                     <td class="p-1">
-                        <textarea oninput="currentRows[${i}][8]=this.value" class="w-full p-2 border rounded h-10" placeholder="空欄">${row[8]||''}</textarea>
+                        <textarea oninput="currentRows[${i}][8]=this.value" 
+                            class="w-full p-2 border rounded h-10 shadow-sm focus:border-blue-500 outline-none" 
+                            placeholder="備考を入力">${row[8]||''}</textarea>
                     </td>
                 </tr>
             `).join('');
@@ -87,12 +101,13 @@
             const btn = document.getElementById('saveBtn');
             btn.innerText = "保存中...";
             try {
+                // 保存対象(currentRows)はヘッダーを除く全データ(10列分)
                 await fetch(GAS_URL, { 
                     method: 'POST', 
                     mode: 'no-cors', 
                     body: JSON.stringify({ type: "updateData", eventName: name, rows: currentRows }) 
                 });
-                alert(`「【結果】${name}」として保存しました。`);
+                alert(`「【結果】${name}」として別シートに保存しました！`);
             } catch(e) {
                 alert("保存に失敗しました。");
             }
