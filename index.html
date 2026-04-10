@@ -10,21 +10,29 @@
 
   document.getElementById('myForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    
+
     const data = {
       name: document.getElementById('name').value,
       email: document.getElementById('email').value,
       message: document.getElementById('message').value
     };
 
+    // fetchのオプションを変更
     fetch(url, {
       method: 'POST',
-      body: JSON.stringify(data),
+      mode: 'no-cors', // CORSエラーを強制的に無視するモード
+      headers: {
+        'Content-Type': 'text/plain', // あえてJSONではなくテキストとして送る（GASの制限回避）
+      },
+      body: JSON.stringify(data)
     })
-    .then(res => res.json())
-    .then(result => {
-      alert('送信完了しました！');
+    .then(() => {
+      // no-corsモードではレスポンスが取れないため、成否に関わらずここに来る
+      alert('送信処理を実行しました。スプレッドシートを確認してください！');
+      document.getElementById('myForm').reset();
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+      alert('通信エラーが発生しました: ' + error.message);
+    });
   });
 </script>
