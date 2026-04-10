@@ -2,76 +2,140 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理者パネル</title>
+    <title>管理者設定</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-4 pb-12">
-    <div class="max-w-md mx-auto bg-white rounded-2xl shadow-xl p-6">
-        <h1 class="text-xl font-bold mb-6 italic">🛠 Admin Panel</h1>
+<body class="bg-slate-100 p-4 pb-12">
+    <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl p-8">
+        <h1 class="text-2xl font-black text-gray-800 mb-8 flex items-center gap-2">
+            <span class="text-3xl">⚙️</span> 管理パネル
+        </h1>
         
-        <div class="space-y-4">
-            <input type="text" id="eventName" placeholder="イベント名を入力" class="w-full border-2 p-4 rounded-xl outline-none focus:border-blue-500">
-            <button onclick="createNewEvent()" id="btn" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg">新規イベント作成</button>
+        <div class="space-y-4 mb-10">
+            <p class="text-sm font-bold text-gray-500 ml-1">新しいイベントを作る</p>
+            <input type="text" id="eventName" placeholder="例：4月10日 練習試合" 
+                class="w-full border-2 border-gray-100 p-4 rounded-2xl outline-none focus:border-blue-500 bg-gray-50 text-lg font-bold">
+            <button onclick="createNewEvent()" id="createBtn" 
+                class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg active:scale-95 transition-all">
+                新規シートを作成
+            </button>
             
-            <div id="resultArea" class="hidden p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-                <p class="text-[10px] font-bold text-yellow-700">案内URL:</p>
-                <textarea id="inviteUrl" readonly class="w-full text-[10px] p-2 border mt-1 h-16"></textarea>
-                <button onclick="copyUrl()" class="w-full bg-yellow-600 text-white py-2 mt-2 rounded-lg text-sm">URLをコピー</button>
+            <div id="resultArea" class="hidden p-5 bg-blue-50 rounded-2xl border-2 border-blue-100 animate-pulse-once">
+                <p class="text-xs font-bold text-blue-600 mb-2">配布用URLが完成しました：</p>
+                <textarea id="inviteUrl" readonly class="w-full text-[10px] p-3 border rounded-xl bg-white h-20 mb-3 text-gray-500"></textarea>
+                <button onclick="copyUrl()" class="w-full bg-blue-500 text-white py-2 rounded-xl text-sm font-bold shadow-sm">URLをコピーする</button>
             </div>
-
-            <a href="view.html" class="block w-full text-center py-4 bg-slate-800 text-white rounded-xl font-bold shadow-md">📊 集計・配車画面へ</a>
         </div>
 
-        <div class="mt-10 border-t pt-6">
-            <p class="text-xs font-bold text-gray-400 mb-4 uppercase">既存イベントの削除</p>
-            <div id="eventList" class="space-y-2"></div>
+        <div class="grid grid-cols-1 gap-3 mb-10">
+            <a href="view.html" class="flex items-center justify-center gap-2 w-full py-4 bg-slate-800 text-white rounded-2xl font-bold shadow-md hover:bg-slate-700">
+                📊 配車管理（集計）画面へ
+            </a>
+        </div>
+
+        <div class="border-t pt-8">
+            <p class="text-xs font-bold text-gray-400 mb-4 tracking-widest uppercase">既存イベントの管理・削除</p>
+            <div id="eventList" class="space-y-3">
+                <p class="text-xs text-center text-gray-400">読み込み中...</p>
+            </div>
         </div>
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyThRaAvgBfYrvRNcbOfOTc4m5Rrgd4FoFNBY8qecgz_ubGzr3zvqUSe_4If74FWFbwEA/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUiiynEDBvBNe5o7PrhMcCwFypBvrRosmuLaC3vJPM2KCpX6ZLMupBJwlH-SZIj8VO_w/exec"; // ★差し替え
         const ADMIN_PASSWORD = "admin123";
 
         window.onload = () => {
-            const pass = prompt("Password?");
-            if(pass !== ADMIN_PASSWORD) location.href="index.html";
-            loadEventList();
+            const pass = prompt("管理者パスワードを入力してください");
+            if(pass !== ADMIN_PASSWORD) {
+                alert("パスワードが違います");
+                location.href="index.html";
+            } else {
+                loadEventList();
+            }
         };
 
         async function loadEventList() {
             const listArea = document.getElementById('eventList');
-            const res = await fetch(`${GAS_URL}?action=getSheets`);
-            const sheets = await res.json();
-            listArea.innerHTML = sheets.map(name => `
-                <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg border">
-                    <span class="text-xs font-bold text-gray-600">${name}</span>
-                    <button onclick="deleteEvent('${name}')" class="text-[10px] bg-red-100 text-red-600 px-3 py-1 rounded-md font-bold">削除</button>
-                </div>
-            `).join('');
+            try {
+                const res = await fetch(`${GAS_URL}?action=getSheets`);
+                const sheets = await res.json();
+                
+                if(sheets.length === 0) {
+                    listArea.innerHTML = '<p class="text-xs text-center text-gray-400">イベントはありません</p>';
+                    return;
+                }
+
+                listArea.innerHTML = sheets.map(name => `
+                    <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 group">
+                        <span class="text-sm font-bold text-gray-700">${name}</span>
+                        <button onclick="deleteEvent('${name}')" 
+                            class="text-[10px] bg-red-50 text-red-500 px-3 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white transition-colors">
+                            削除
+                        </button>
+                    </div>
+                `).join('');
+            } catch (e) {
+                listArea.innerHTML = '<p class="text-xs text-red-400 text-center">エラーが発生しました</p>';
+            }
         }
 
         async function createNewEvent() {
             const name = document.getElementById('eventName').value.trim();
-            if(!name) return;
-            document.getElementById('btn').innerText = "作成中...";
-            await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "createEvent", eventName: name }) });
-            const dir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-            document.getElementById('inviteUrl').value = `${dir}/index.html?event=${encodeURIComponent(name)}`;
-            document.getElementById('resultArea').classList.remove('hidden');
-            document.getElementById('btn').innerText = "新規イベント作成";
-            loadEventList();
+            if(!name) { alert("イベント名を入力してください"); return; }
+            
+            const btn = document.getElementById('createBtn');
+            btn.disabled = true;
+            btn.innerText = "作成中...";
+
+            try {
+                await fetch(GAS_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify({ type: "createEvent", eventName: name }) 
+                });
+                
+                const dir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                document.getElementById('inviteUrl').value = `${dir}/index.html?event=${encodeURIComponent(name)}`;
+                document.getElementById('resultArea').classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerText = "新規シートを作成";
+                loadEventList();
+            } catch (e) {
+                alert("作成に失敗しました");
+                btn.disabled = false;
+                btn.innerText = "新規シートを作成";
+            }
         }
 
         async function deleteEvent(name) {
-            if(!confirm(`「${name}」を削除しますか？`)) return;
-            await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "deleteEvent", eventName: name }) });
+            if(!confirm(`「${name}」を完全に削除しますか？\n(スプレッドシートのシートも削除されます)`)) return;
+            
+            await fetch(GAS_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ type: "deleteEvent", eventName: name }) 
+            });
             loadEventList();
         }
 
         function copyUrl() {
             const url = document.getElementById('inviteUrl');
-            url.select(); document.execCommand('copy'); alert("コピーしました");
+            url.select();
+            document.execCommand('copy');
+            alert("URLをコピーしました！LINEなどで共有してください。");
         }
     </script>
+
+    <style>
+        @keyframes pulse-once {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        .animate-pulse-once {
+            animation: pulse-once 0.5s ease-out;
+        }
+    </style>
 </body>
 </html>
