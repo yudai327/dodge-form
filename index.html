@@ -5,84 +5,99 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>イベント参加回答</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* タップ時の青い枠線を消すカスタムCSS */
+        -webkit-tap-highlight-color: transparent;
+    </style>
 </head>
-<body class="bg-slate-50 p-4 pb-20">
-    <div class="max-w-lg mx-auto bg-white rounded-2xl shadow-lg p-6">
-        <h1 class="text-2xl font-bold text-blue-600 mb-2">参加確認アンケート</h1>
-        <p class="text-sm text-gray-500 mb-8 border-b pb-4">項目を入力して送信してください。</p>
+<body class="bg-slate-50 p-4 pb-24"> <div class="max-w-lg mx-auto bg-white rounded-3xl shadow-xl p-6 md:p-8">
+        <h1 class="text-2xl md:text-3xl font-extrabold text-blue-700 mb-2 tracking-tight">参加確認アンケート</h1>
+        <p class="text-sm text-gray-500 mb-8 border-b pb-4">必要事項を入力して送信してください。</p>
 
-        <form id="ansForm" class="space-y-5">
+        <form id="ansForm" class="space-y-6">
             <div>
-                <label class="block text-sm font-bold text-gray-700">対象イベント</label>
-                <select id="eventName" required class="mt-1 block w-full border-blue-300 rounded-md shadow-sm border p-3 bg-blue-50 font-bold focus:ring-2 focus:ring-blue-500 outline-none">
+                <label class="block text-base font-bold text-gray-800 mb-1">対象イベント</label>
+                <select id="eventName" required class="mt-1 block w-full border-2 border-blue-200 rounded-xl shadow-sm p-4 bg-blue-50 font-bold focus:ring-2 focus:ring-blue-500 outline-none text-lg">
                     <option value="">読込中...</option>
                 </select>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700">学年</label>
-                    <select id="grade" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2">
+                    <label class="block text-base font-bold text-gray-800 mb-1">① 学年</label>
+                    <select id="grade" class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm border p-4 text-lg bg-white">
                         <option>1年</option><option>2年</option><option>3年</option>
                         <option>4年</option><option>5年</option><option>6年</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700">名前</label>
-                    <input type="text" id="name" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2">
+                    <label class="block text-base font-bold text-gray-800 mb-1">② 名前</label>
+                    <input type="text" id="name" required placeholder="氏名" class="mt-1 block w-full border-gray-300 rounded-xl shadow-sm border p-4 text-lg">
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-bold text-gray-700">参加の可否</label>
-                <div class="mt-2 flex space-x-4">
-                    <label class="flex-1 border p-3 rounded-lg text-center cursor-pointer bg-gray-50 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500">
-                        <input type="radio" name="attendance" value="参加" checked class="hidden"> 参加
+                <label class="block text-base font-bold text-gray-800 mb-2">③ 参加の可否</label>
+                <div class="flex space-x-4">
+                    <label class="flex-1 border-2 p-4 rounded-2xl text-center cursor-pointer bg-gray-50 has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500 has-[:checked]:text-blue-700 transition-all shadow-sm">
+                        <input type="radio" name="attendance" value="参加" checked class="hidden"> <span class="font-bold text-xl">参加</span>
                     </label>
-                    <label class="flex-1 border p-3 rounded-lg text-center cursor-pointer bg-gray-50 has-[:checked]:bg-red-100 has-[:checked]:border-red-500">
-                        <input type="radio" name="attendance" value="不参加" class="hidden"> 欠席
+                    <label class="flex-1 border-2 p-4 rounded-2xl text-center cursor-pointer bg-gray-50 has-[:checked]:bg-red-50 has-[:checked]:border-red-500 has-[:checked]:text-red-700 transition-all shadow-sm">
+                        <input type="radio" name="attendance" value="不参加" class="hidden"> <span class="font-bold text-xl">欠席</span>
                     </label>
                 </div>
             </div>
 
-            <div class="bg-blue-50 p-4 rounded-xl space-y-4">
-                <div class="flex items-center justify-between">
-                    <label class="text-sm font-bold text-blue-800">送迎の可否</label>
-                    <select id="pickup" class="border-blue-200 rounded-md border p-1 bg-white">
-                        <option value="不可">不可</option><option value="可">可</option>
-                    </select>
+            <div class="bg-blue-50 p-5 rounded-2xl space-y-4 shadow-inner border border-blue-100">
+                <label class="block text-base font-bold text-blue-900">④ 送迎の可否</label>
+                <div class="flex space-x-3">
+                    <label class="flex items-center justify-center flex-1 p-3 bg-white border border-gray-300 rounded-xl cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-100 has-[:checked]:ring-2 has-[:checked]:ring-blue-200">
+                        <input type="radio" name="pickup" value="不可" checked class="w-5 h-5 text-blue-600 border-gray-300"> <span class="ml-2 font-bold text-gray-700">不可</span>
+                    </label>
+                    <label class="flex items-center justify-center flex-1 p-3 bg-white border border-gray-300 rounded-xl cursor-pointer has-[:checked]:border-blue-500 has-[:checked]:bg-blue-100 has-[:checked]:ring-2 has-[:checked]:ring-blue-200">
+                        <input type="radio" name="pickup" value="可" class="w-5 h-5 text-blue-600 border-gray-300"> <span class="ml-2 font-bold text-gray-700">可</span>
+                    </label>
                 </div>
-                <div class="flex items-center text-sm text-gray-600">
-                    可の場合の人数：<input type="number" id="pickupCount" value="0" min="0" class="w-16 border rounded ml-2 p-1">
+                <div class="flex items-center text-sm text-gray-700 justify-end pt-2">
+                    可の場合の合計人数：<input type="number" id="pickupCount" value="0" min="0" class="w-24 border border-blue-200 rounded-lg ml-2 p-3 text-lg text-center font-bold">
                 </div>
             </div>
 
-            <div class="bg-green-50 p-4 rounded-xl space-y-4">
-                <div class="flex items-center justify-between">
-                    <label class="text-sm font-bold text-green-800">乗り合わせの可否</label>
-                    <select id="carpool" class="border-green-200 rounded-md border p-1 bg-white">
-                        <option value="不可">不可</option><option value="可">可</option>
-                    </select>
+            <div class="bg-green-50 p-5 rounded-2xl space-y-4 shadow-inner border border-green-100">
+                <label class="block text-base font-bold text-green-900">⑤ 乗り合わせの可否</label>
+                <div class="flex space-x-3">
+                    <label class="flex items-center justify-center flex-1 p-3 bg-white border border-gray-300 rounded-xl cursor-pointer has-[:checked]:border-green-500 has-[:checked]:bg-green-100 has-[:checked]:ring-2 has-[:checked]:ring-green-200">
+                        <input type="radio" name="carpool" value="不可" checked class="w-5 h-5 text-green-600 border-gray-300"> <span class="ml-2 font-bold text-gray-700">不可</span>
+                    </label>
+                    <label class="flex items-center justify-center flex-1 p-3 bg-white border border-gray-300 rounded-xl cursor-pointer has-[:checked]:border-green-500 has-[:checked]:bg-green-100 has-[:checked]:ring-2 has-[:checked]:ring-green-200">
+                        <input type="radio" name="carpool" value="可" class="w-5 h-5 text-green-600 border-gray-300"> <span class="ml-2 font-bold text-gray-700">可</span>
+                    </label>
                 </div>
-                <div class="flex items-center text-sm text-gray-600">
-                    受入可能人数：<input type="number" id="carpoolCount" value="0" min="0" class="w-16 border rounded ml-2 p-1">
+                <div class="flex items-center text-sm text-gray-700 justify-end pt-2">
+                    受入可能人数：<input type="number" id="carpoolCount" value="0" min="0" class="w-24 border border-green-200 rounded-lg ml-2 p-3 text-lg text-center font-bold">
                 </div>
             </div>
 
             <div>
-                <label class="block text-sm font-bold text-gray-700">備考</label>
-                <textarea id="note" class="mt-1 block w-full border-gray-300 rounded-md p-2" rows="2"></textarea>
+                <label class="block text-base font-bold text-gray-800">⑥ 備考</label>
+                <textarea id="note" placeholder="特記事項があれば記入してください" class="mt-1 block w-full border-gray-300 rounded-xl p-4 text-lg" rows="3"></textarea>
             </div>
 
-            <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 shadow-lg transition">
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-extrabold py-5 rounded-3xl hover:bg-blue-700 shadow-lg transition-all active:scale-95 text-xl tracking-wider">
                 回答を送信する
             </button>
         </form>
     </div>
 
-    <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxAikiWUWIPGr2YrNpUa__MYISZtabOBjiCjBZ6ntIuzWqy4ePNN50680K0l0tWCe8f4g/exec";
+    <a href="admin.html" class="fixed bottom-6 right-6 bg-gray-900/60 hover:bg-gray-900 text-white text-xs py-3 px-5 rounded-full backdrop-blur-sm transition-all shadow-xl flex items-center gap-2 group border border-white/20">
+        <span class="text-base">⚙️</span>
+        <span class="font-bold">管理者ページ</span>
+    </a>
 
+    <script>
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxAikiWUWIPGr2YrNpUa__MYISZtabOBjiCjBZ6ntIuzWqy4ePNN50680K0l0tWCe8f4g/exec"; // ★ここに最新のURLを貼ってください
+
+        // シート一覧の取得と自動選択
         window.onload = async () => {
             const select = document.getElementById('eventName');
             const urlParams = new URLSearchParams(window.location.search);
@@ -93,6 +108,11 @@
                 const sheetNames = await res.json();
                 select.innerHTML = "";
                 
+                if (sheetNames.length === 0) {
+                    select.innerHTML = '<option value="">有効なイベントがありません</option>';
+                    return;
+                }
+
                 sheetNames.forEach(name => {
                     const opt = document.createElement('option');
                     opt.value = name;
@@ -101,23 +121,31 @@
                     select.appendChild(opt);
                 });
             } catch (e) {
-                select.innerHTML = '<option value="">読込失敗</option>';
+                select.innerHTML = '<option value="">イベント読込失敗</option>';
             }
         };
 
+        // 送信処理
         document.getElementById('ansForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "送信中...";
+            btn.disabled = true; 
+            btn.innerHTML = '<span class="animate-pulse">送信中...</span>';
+
+            // ラジオボタンの値を取得する関数
+            const getRadioValue = (name) => {
+                const checked = document.querySelector(`input[name="${name}"]:checked`);
+                return checked ? checked.value : '';
+            };
 
             const data = {
                 eventName: document.getElementById('eventName').value,
                 grade: document.getElementById('grade').value,
                 name: document.getElementById('name').value,
-                attendance: document.querySelector('input[name="attendance"]:checked').value,
-                pickup: document.getElementById('pickup').value,
+                attendance: getRadioValue('attendance'), // ラジオボタン
+                pickup: getRadioValue('pickup'),         // ラジオボタン
                 pickupCount: document.getElementById('pickupCount').value,
-                carpool: document.getElementById('carpool').value,
+                carpool: getRadioValue('carpool'),       // ラジオボタン
                 carpoolCount: document.getElementById('carpoolCount').value,
                 note: document.getElementById('note').value
             };
@@ -127,8 +155,9 @@
                 alert("送信が完了しました！");
                 location.reload(); // リロードして入力をクリア
             } catch (e) {
-                alert("送信エラー。再試行してください。");
-                btn.disabled = false; btn.innerText = "回答を送信する";
+                alert("送信エラーが発生しました。");
+                btn.disabled = false;
+                btn.innerText = "回答を送信する";
             }
         });
     </script>
