@@ -17,7 +17,7 @@
                 <input type="text" id="eventName" placeholder="例：2026年5月 練習試合" 
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
             </div>
-            <button onclick="createEvent()" id="btn"
+            <button onclick="createNewEvent()" id="btn"
                 class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition">
                 シートを作成する
             </button>
@@ -25,9 +25,11 @@
     </div>
 
     <script>
+        // ここをあなたの最新のURLに差し替えてください
         const GAS_URL = "https://script.google.com/macros/s/AKfycbxAikiWUWIPGr2YrNpUa__MYISZtabOBjiCjBZ6ntIuzWqy4ePNN50680K0l0tWCe8f4g/exec";
 
-        async function createEvent() {
+        // 関数名を変更
+        async function createNewEvent() {
             const name = document.getElementById('eventName').value;
             if(!name) return alert("イベント名を入力してください");
             
@@ -44,7 +46,7 @@
                 alert("作成リクエストを送信しました！スプレッドシートを確認してください。");
                 document.getElementById('eventName').value = "";
             } catch (e) {
-                alert("エラーが発生しました");
+                alert("エラーが発生しました: " + e.message);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "シートを作成する";
