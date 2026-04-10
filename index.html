@@ -2,52 +2,68 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>参加回答フォーム</title>
+    <title>参加回答</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .btn-radio:checked + label { border-color: #3b82f6; background-color: #eff6ff; color: #1d4ed8; font-weight: bold; }
+    </style>
 </head>
-<body class="bg-slate-50 p-4 pb-24">
+<body class="bg-slate-50 p-4 pb-12">
     <div class="max-w-lg mx-auto bg-white rounded-3xl shadow-xl p-6">
-        <h1 class="text-2xl font-extrabold text-blue-700 mb-6 border-b pb-4">参加確認アンケート</h1>
+        <h1 class="text-2xl font-bold text-blue-700 mb-6 border-b pb-4">参加確認アンケート</h1>
         <form id="ansForm" class="space-y-6">
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-1">対象イベント</label>
-                <select id="eventName" required class="w-full border-2 border-blue-100 rounded-xl p-4 bg-blue-50 font-bold outline-none focus:border-blue-500"></select>
+                <label class="block text-sm font-bold text-gray-600 mb-1">対象イベント</label>
+                <select id="eventName" required class="w-full border-2 border-gray-100 rounded-xl p-4 bg-gray-50 font-bold outline-none focus:border-blue-400"></select>
             </div>
+            
             <div class="grid grid-cols-2 gap-4">
-                <input type="text" id="name" required placeholder="名前" class="border p-4 rounded-xl text-lg">
-                <select id="grade" class="border p-4 rounded-xl text-lg bg-white">
+                <input type="text" id="name" required placeholder="名前" class="border-2 border-gray-100 p-4 rounded-xl text-lg outline-none focus:border-blue-400">
+                <select id="grade" class="border-2 border-gray-100 p-4 rounded-xl text-lg bg-white">
                     <option>1年</option><option>2年</option><option>3年</option><option>4年</option><option>5年</option><option>6年</option>
                 </select>
             </div>
+
             <div>
-                <label class="block text-sm font-bold text-gray-700 mb-2">参加の可否</label>
+                <label class="block text-sm font-bold text-gray-600 mb-2">参加の可否</label>
                 <div class="flex gap-4">
-                    <label class="flex-1 border-2 p-4 rounded-2xl text-center has-[:checked]:bg-blue-100 has-[:checked]:border-blue-500"><input type="radio" name="attendance" value="参加" checked class="hidden"> 参加</label>
-                    <label class="flex-1 border-2 p-4 rounded-2xl text-center has-[:checked]:bg-red-100 has-[:checked]:border-red-500"><input type="radio" name="attendance" value="不参加" class="hidden"> 欠席</label>
+                    <input type="radio" name="attendance" value="参加" id="att-yes" class="hidden btn-radio" checked>
+                    <label for="att-yes" class="flex-1 border-2 p-4 rounded-2xl text-center cursor-pointer transition">参加</label>
+                    <input type="radio" name="attendance" value="不参加" id="att-no" class="hidden btn-radio">
+                    <label for="att-no" class="flex-1 border-2 p-4 rounded-2xl text-center cursor-pointer transition">欠席</label>
                 </div>
             </div>
+
             <div class="bg-blue-50 p-4 rounded-2xl">
-                <label class="block text-xs font-bold text-blue-800 mb-2">送迎（自車）の空き数</label>
-                <div class="flex gap-2 items-center">
-                    <select id="pickup" class="p-2 rounded-lg border flex-1"><option value="不可">不可</option><option value="可">可</option></select>
-                    <input type="number" id="pickupCount" value="0" class="w-20 p-2 rounded-lg border text-center" placeholder="人数">
+                <label class="block text-sm font-bold text-blue-800 mb-2">送迎（自車）の可否</label>
+                <div class="flex gap-3 mb-3">
+                    <input type="radio" name="pickup" value="可" id="p-yes" class="hidden btn-radio">
+                    <label for="p-yes" class="flex-1 border-2 bg-white p-3 rounded-xl text-center cursor-pointer transition">可</label>
+                    <input type="radio" name="pickup" value="不可" id="p-no" class="hidden btn-radio" checked>
+                    <label for="p-no" class="flex-1 border-2 bg-white p-3 rounded-xl text-center cursor-pointer transition">不可</label>
                 </div>
+                <input type="number" id="pickupCount" value="0" class="w-full p-3 rounded-xl border-2 border-blue-100 outline-none focus:border-blue-400" placeholder="可能な空き人数">
             </div>
+
             <div class="bg-orange-50 p-4 rounded-2xl">
-                <label class="block text-xs font-bold text-orange-800 mb-2">乗合（他車）への希望人数</label>
-                <div class="flex gap-2 items-center">
-                    <select id="carpool" class="p-2 rounded-lg border flex-1"><option value="不可">不要</option><option value="可">希望</option></select>
-                    <input type="number" id="carpoolCount" value="0" class="w-20 p-2 rounded-lg border text-center" placeholder="人数">
+                <label class="block text-sm font-bold text-orange-800 mb-2">乗り合わせ（他車）への希望</label>
+                <div class="flex gap-3 mb-3">
+                    <input type="radio" name="carpool" value="可" id="c-yes" class="hidden btn-radio">
+                    <label for="c-yes" class="flex-1 border-2 bg-white p-3 rounded-xl text-center cursor-pointer transition">希望</label>
+                    <input type="radio" name="carpool" value="不可" id="c-no" class="hidden btn-radio" checked>
+                    <label for="c-no" class="flex-1 border-2 bg-white p-3 rounded-xl text-center cursor-pointer transition">不要</label>
                 </div>
+                <input type="number" id="carpoolCount" value="0" class="w-full p-3 rounded-xl border-2 border-orange-100 outline-none focus:border-orange-400" placeholder="希望人数">
             </div>
-            <textarea id="note" placeholder="備考" class="w-full border p-4 rounded-xl" rows="2"></textarea>
-            <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-bold py-5 rounded-2xl shadow-lg active:scale-95">回答を送信する</button>
+
+            <textarea id="note" placeholder="備考" class="w-full border-2 border-gray-100 p-4 rounded-xl outline-none focus:border-blue-400" rows="3"></textarea>
+            
+            <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-lg active:scale-95 text-lg">回答を送信する</button>
         </form>
     </div>
-    <a href="admin.html" class="fixed bottom-6 right-6 bg-gray-800/40 text-white p-3 rounded-full text-xs backdrop-blur">⚙️ 管理</a>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbyThRaAvgBfYrvRNcbOfOTc4m5Rrgd4FoFNBY8qecgz_ubGzr3zvqUSe_4If74FWFbwEA/exec";
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUiiynEDBvBNe5o7PrhMcCwFypBvrRosmuLaC3vJPM2KCpX6ZLMupBJwlH-SZIj8VO_w/exec";
         window.onload = async () => {
             const select = document.getElementById('eventName');
             const eventParam = new URLSearchParams(window.location.search).get('event');
@@ -56,7 +72,7 @@
             sheets.forEach(s => {
                 const opt = new Option(s, s);
                 if(s === eventParam) opt.selected = true;
-                select.add(opt);
+                if(!s.includes("【結果】")) select.add(opt);
             });
         };
         document.getElementById('ansForm').addEventListener('submit', async (e) => {
@@ -68,9 +84,9 @@
                 grade: document.getElementById('grade').value,
                 name: document.getElementById('name').value,
                 attendance: document.querySelector('input[name="attendance"]:checked').value,
-                pickup: document.getElementById('pickup').value,
+                pickup: document.querySelector('input[name="pickup"]:checked').value,
                 pickupCount: document.getElementById('pickupCount').value,
-                carpool: document.getElementById('carpool').value,
+                carpool: document.querySelector('input[name="carpool"]:checked').value,
                 carpoolCount: document.getElementById('carpoolCount').value,
                 note: document.getElementById('note').value
             };
