@@ -24,9 +24,9 @@
             </button>
 
             <div id="resultArea" class="hidden mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p class="text-xs font-bold text-yellow-800 mb-2">案内用URLが作成されました：</p>
-                <textarea id="inviteUrl" readonly class="w-full text-xs p-2 border border-yellow-300 bg-white rounded mb-2 h-20"></textarea>
-                <button onclick="copyUrl()" class="text-xs bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700">URLをコピー</button>
+                <p class="text-xs font-bold text-yellow-800 mb-2">案内用URL：</p>
+                <textarea id="inviteUrl" readonly class="w-full text-xs p-2 border border-yellow-300 bg-white rounded mb-2 h-16"></textarea>
+                <button onclick="copyUrl()" class="w-full bg-yellow-600 text-white py-2 rounded text-sm hover:bg-yellow-700 transition">URLをコピー</button>
             </div>
         </div>
         
@@ -36,7 +36,7 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbxAikiWUWIPGr2YrNpUa__MYISZtabOBjiCjBZ6ntIuzWqy4ePNN50680K0l0tWCe8f4g/exec"; // 貼り直してください
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbxAikiWUWIPGr2YrNpUa__MYISZtabOBjiCjBZ6ntIuzWqy4ePNN50680K0l0tWCe8f4g/exec"; 
 
         async function createNewEvent() {
             const nameInput = document.getElementById('eventName');
@@ -44,8 +44,12 @@
             if(!name) return alert("名前を入力してください");
             
             const btn = document.getElementById('btn');
+            const resultArea = document.getElementById('resultArea');
+            const inviteUrlInput = document.getElementById('inviteUrl');
+
             btn.disabled = true;
             btn.innerText = "作成中...";
+            resultArea.classList.add('hidden');
 
             try {
                 await fetch(GAS_URL, {
@@ -54,14 +58,15 @@
                     body: JSON.stringify({ type: "createEvent", eventName: name })
                 });
 
-                // 案内用URLの生成
-                const baseUrl = window.location.href.split('admin.html')[0];
-                const inviteUrl = `${baseUrl}index.html?event=${encodeURIComponent(name)}`;
+                // URL生成ロジック
+                let currentUrl = window.location.href;
+                let baseUrl = currentUrl.substring(0, currentUrl.lastIndexOf('/') + 1);
+                const finalUrl = `${baseUrl}index.html?event=${encodeURIComponent(name)}`;
                 
-                document.getElementById('resultArea').classList.remove('hidden');
-                document.getElementById('inviteUrl').value = inviteUrl;
+                inviteUrlInput.value = finalUrl;
+                resultArea.classList.remove('hidden');
                 
-                alert("シートの作成依頼を送りました！");
+                alert("スプレッドシートにシートを作成しました！");
             } catch (e) {
                 alert("エラーが発生しました");
             } finally {
@@ -74,7 +79,7 @@
             const urlText = document.getElementById('inviteUrl');
             urlText.select();
             document.execCommand('copy');
-            alert("クリップボードにコピーしました！これをLINEなどで送ってください。");
+            alert("コピーしました！LINEなどで送ってください。");
         }
     </script>
 </body>
