@@ -74,7 +74,7 @@
                 listArea.innerHTML = sheets.map(name => `
                     <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 group">
                         <span class="text-sm font-bold text-gray-700">${name}</span>
-                        <button onclick="deleteEvent(this, '${name}')"
+                        <button onclick="deleteEvent(this)" data-name="${name.replace(/"/g, '&quot;')}"
                             class="text-[10px] bg-red-50 text-red-500 px-3 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white transition-colors">
                             削除
                         </button>
@@ -112,7 +112,8 @@
             }
         }
 
-        async function deleteEvent(btn, name) {
+        async function deleteEvent(btn) {
+            const name = btn.dataset.name;
             if(!confirm(`「${name}」を完全に削除しますか？\n(スプレッドシートのシートも削除されます)`)) return;
 
             btn.disabled = true;

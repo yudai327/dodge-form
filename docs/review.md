@@ -8,6 +8,11 @@
 | 🟡 中（バグ・UX） | 4 |
 | 🟢 低（コード品質） | 4 |
 
+**対応状況:**
+- [1] GitHub Pages の制約上、クライアントサイド認証は許容済み
+- [2] ✅ 修正済み（`data-name` 属性方式に変更）
+- [3] GitHub Pages / GAS の構成上、バックエンド認証は構造的に困難なため許容済み
+
 ---
 
 ## 🔴 高（セキュリティ）
@@ -29,25 +34,22 @@ const ADMIN_PASSWORD = "admin123";
 
 ---
 
-### [2] `deleteEvent` の onclick 属性にイベント名を直接埋め込んでいる
+### [2] `deleteEvent` の onclick 属性にイベント名を直接埋め込んでいる ✅ 修正済み
 
 **対象:** `admin.html`
 
-```javascript
-// loadEventList() 内のテンプレートリテラル
-`<button onclick="deleteEvent(this, '${name}')" ...>`
-```
-
-イベント名にシングルクォート（`'`）が含まれると JavaScript が壊れる。
+**問題:** イベント名にシングルクォート（`'`）が含まれると JavaScript が壊れる。
 悪意あるシート名（例: `test', alert('XSS`）を作れる環境では XSS になりうる。
 
-**改善案:** `data-` 属性でイベント名を保持し、JS 側で取得する。
+**対応内容:** `data-name` 属性でイベント名を保持し、JS 側で `btn.dataset.name` から取得する方式に変更した。
 
 ```javascript
-`<button data-name="${name.replace(/"/g, '&quot;')}" onclick="handleDelete(this)" ...>`
+// 修正後
+`<button onclick="deleteEvent(this)" data-name="${name.replace(/"/g, '&quot;')}" ...>`
 
-function handleDelete(btn) {
-    deleteEvent(btn, btn.dataset.name);
+async function deleteEvent(btn) {
+    const name = btn.dataset.name;
+    // ...
 }
 ```
 
