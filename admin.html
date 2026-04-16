@@ -4,6 +4,7 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>管理者設定</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
 </head>
 <body class="bg-slate-100 p-4 pb-12">
     <div class="max-w-md mx-auto bg-white rounded-3xl shadow-xl p-8">
@@ -45,10 +46,6 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUiiynEDBvBNe5o7PrhMcCwFypBvrRosmuLaC3vJPM2KCpX6ZLMupBJwlH-SZIj8VO_w/exec"; // ★差し替え
-        const ADMIN_PASSWORD = "admin123";
-        const spin = (cls = 'h-4 w-4') => `<svg class="animate-spin ${cls} inline-block align-middle mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.568 3 7.538l3-2.247z"></path></svg>`;
-
         window.onload = () => {
             const pass = prompt("管理者パスワードを入力してください");
             if(pass !== ADMIN_PASSWORD) {
@@ -71,8 +68,11 @@
                     return;
                 }
 
-                listArea.innerHTML = sheets.map(name => `
-                    <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100 group">
+                const eventSheets = sheets.filter(s => !s.includes('【結果】'));
+                const resultSheets = sheets.filter(s => s.includes('【結果】'));
+
+                let html = eventSheets.map(name => `
+                    <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <span class="text-sm font-bold text-gray-700">${name}</span>
                         <button onclick="deleteEvent(this)" data-name="${name.replace(/"/g, '&quot;')}"
                             class="text-[10px] bg-red-50 text-red-500 px-3 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white transition-colors">
@@ -80,6 +80,21 @@
                         </button>
                     </div>
                 `).join('');
+
+                if(resultSheets.length > 0) {
+                    html += `<p class="text-[10px] font-bold text-gray-400 mt-4 mb-2 tracking-widest uppercase">結果シート</p>`;
+                    html += resultSheets.map(name => `
+                        <div class="flex justify-between items-center p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                            <span class="text-sm text-slate-400">${name}</span>
+                            <button onclick="deleteEvent(this)" data-name="${name.replace(/"/g, '&quot;')}"
+                                class="text-[10px] bg-red-50 text-red-400 px-3 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white transition-colors">
+                                削除
+                            </button>
+                        </div>
+                    `).join('');
+                }
+
+                listArea.innerHTML = html;
             } catch (e) {
                 listArea.innerHTML = '<p class="text-xs text-red-400 text-center">エラーが発生しました</p>';
             }
@@ -103,6 +118,7 @@
                 const dir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
                 document.getElementById('inviteUrl').value = `${dir}/index.html?event=${encodeURIComponent(name)}`;
                 document.getElementById('resultArea').classList.remove('hidden');
+                document.getElementById('eventName').value = '';
                 loadEventList();
             } catch (e) {
                 alert("作成に失敗しました");
@@ -135,10 +151,10 @@
         }
 
         function copyUrl() {
-            const url = document.getElementById('inviteUrl');
-            url.select();
-            document.execCommand('copy');
-            alert("URLをコピーしました！LINEなどで共有してください。");
+            const text = document.getElementById('inviteUrl').value;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("URLをコピーしました！LINEなどで共有してください。");
+            });
         }
     </script>
 
