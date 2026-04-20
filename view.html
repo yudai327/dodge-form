@@ -23,9 +23,9 @@
                         <th class="p-4 border-r border-slate-700 w-16">学年</th>
                         <th class="p-4 border-r border-slate-700">名前</th>
                         <th class="p-4 border-r border-slate-700 text-center w-20">参加</th>
-                        <th class="p-4 border-r border-slate-700 bg-blue-900 w-44">自車(空き) / 確定</th>
-                        <th class="p-4 border-r border-slate-700 bg-orange-900 w-56">他車(希望) / 配車メモ</th>
-                        <th class="p-4 border-r border-slate-700">備考 (上書き・編集用)</th>
+                        <th class="p-4 border-r border-slate-700 bg-blue-900 w-44">自車 空き / 確定</th>
+                        <th class="p-4 border-r border-slate-700 bg-orange-900 w-56">他車 希望 / 配車メモ</th>
+                        <th class="p-4 border-r border-slate-700">備考</th>
                         <th class="p-2 w-10"></th>
                     </tr>
                 </thead>
@@ -42,6 +42,7 @@
 
     <script>
         let currentRows = [];
+        const GRADES = ['1年','2年','3年','4年','5年','6年'];
 
         window.onload = async () => {
             const pass = prompt("Password?");
@@ -102,54 +103,71 @@
 
         function renderTable(rows) {
             const tbody = document.getElementById('dataTable');
+            const cell = 'p-1 bg-transparent outline-none w-full focus:bg-white focus:ring-1 focus:ring-blue-300 focus:rounded';
             tbody.innerHTML = rows.map((row, i) => {
-                const isManual = !!row[9];
                 const isAttending = row[2] === '参加';
                 let memo = (row[7] || "").toString();
                 let note = (row[8] || "").toString();
                 if(memo.includes('T') && memo.includes('Z')) memo = ""; // 日付誤入ガード
                 if(note.includes('T') && note.includes('Z')) note = "";
 
-                const gradeCell = isManual
-                    ? `<select onchange="currentRows[${i}][0]=this.value" class="w-full p-1 border rounded text-xs bg-white">
-                        ${['1年','2年','3年','4年','5年','6年'].map(g => `<option ${row[0]===g?'selected':''}>${g}</option>`).join('')}
-                       </select>`
-                    : row[0];
-
-                const nameCell = isManual
-                    ? `<input type="text" value="${row[1]}" oninput="currentRows[${i}][1]=this.value" class="w-full p-2 border rounded shadow-sm font-bold" placeholder="氏名">`
-                    : row[1];
-
-                const attendanceCell = isManual
-                    ? `<select onchange="currentRows[${i}][2]=this.value" class="w-full p-1 border rounded text-xs text-center bg-white">
-                        <option ${row[2]==='参加'?'selected':''}>参加</option>
-                        <option ${row[2]==='不参加'?'selected':''}>不参加</option>
-                       </select>`
-                    : row[2];
+                const gradeOptions = GRADES.map(g => `<option ${row[0]===g?'selected':''}>${g}</option>`).join('');
 
                 return `
-                <tr class="${isAttending ? '' : 'bg-red-50 opacity-50'} border-b">
-                    <td class="p-4 border-r">${gradeCell}</td>
-                    <td class="p-4 font-bold border-r">${nameCell}</td>
-                    <td class="p-4 text-center border-r font-bold">${attendanceCell}</td>
-                    <td class="p-4 bg-blue-50/50 border-r">
-                        <div class="flex items-center justify-between">
-                            <span>${row[3]==='可' ? `空き:${row[4]}` : '-'}</span>
-                            <input type="checkbox" ${row[3]==='可' ? 'checked' : ''} onchange="currentRows[${i}][3]=this.checked?'可':'不可'" class="w-5 h-5">
+                <tr class="${isAttending ? '' : 'bg-red-50 opacity-50'} border-b" data-row="${i}">
+                    <td class="p-2 border-r">
+                        <select onchange="currentRows[${i}][0]=this.value" class="${cell} cursor-pointer">
+                            ${gradeOptions}
+                        </select>
+                    </td>
+                    <td class="p-2 border-r">
+                        <input type="text" value="${row[1]}" oninput="currentRows[${i}][1]=this.value"
+                            class="${cell} font-bold" placeholder="氏名">
+                    </td>
+                    <td class="p-2 border-r text-center">
+                        <select onchange="updateAttendance(${i}, this.value)" class="${cell} cursor-pointer font-bold text-center">
+                            <option ${row[2]==='参加'?'selected':''}>参加</option>
+                            <option ${row[2]==='不参加'?'selected':''}>不参加</option>
+                        </select>
+                    </td>
+                    <td class="p-3 bg-blue-50/50 border-r">
+                        <div class="flex items-center gap-2">
+                            <input type="number" value="${row[4]||0}" min="0" oninput="currentRows[${i}][4]=this.value"
+                                class="w-14 p-1 border border-gray-200 rounded text-center bg-white focus:outline-none focus:ring-1 focus:ring-blue-300">
+                            <span class="text-[10px] text-gray-400 shrink-0">空き</span>
+                            <input type="checkbox" ${row[3]==='可'?'checked':''} onchange="currentRows[${i}][3]=this.checked?'可':'不可'" class="w-5 h-5 ml-auto shrink-0" title="送迎可">
                         </div>
                     </td>
-                    <td class="p-4 bg-orange-50/50 border-r">
+                    <td class="p-3 bg-orange-50/50 border-r">
                         <div class="flex flex-col gap-1">
-                            <span class="text-[10px] font-bold text-orange-700">${row[5]==='可' ? `希望:${row[6]}名` : ''}</span>
-                            <input type="text" value="${memo}" oninput="currentRows[${i}][7]=this.value" class="w-full p-2 border rounded shadow-sm" placeholder="配車先を入力">
+                            <div class="flex items-center gap-1">
+                                <input type="number" value="${row[6]||0}" min="0" oninput="currentRows[${i}][6]=this.value"
+                                    class="w-14 p-1 border border-gray-200 rounded text-center bg-white focus:outline-none focus:ring-1 focus:ring-orange-300">
+                                <span class="text-[10px] text-orange-600 shrink-0">名希望</span>
+                                <input type="checkbox" ${row[5]==='可'?'checked':''} onchange="currentRows[${i}][5]=this.checked?'可':'不可'" class="w-4 h-4 ml-auto shrink-0" title="乗り合わせ希望">
+                            </div>
+                            <input type="text" value="${memo}" oninput="currentRows[${i}][7]=this.value"
+                                class="w-full p-2 border rounded shadow-sm" placeholder="配車先を入力">
                         </div>
                     </td>
-                    <td class="p-2 border-r"><textarea oninput="currentRows[${i}][8]=this.value" class="w-full p-2 border rounded h-12 shadow-sm">${note}</textarea></td>
+                    <td class="p-2 border-r">
+                        <textarea oninput="currentRows[${i}][8]=this.value" class="w-full p-2 border rounded h-12 shadow-sm">${note}</textarea>
+                    </td>
                     <td class="p-2 text-center">
                         <button onclick="deleteRow(${i})" class="text-red-300 hover:text-red-600 hover:bg-red-50 font-bold text-base w-7 h-7 rounded-full transition-colors" title="この行を除外">✕</button>
                     </td>
                 </tr>
             `}).join('');
+        }
+
+        function updateAttendance(i, value) {
+            currentRows[i][2] = value;
+            const tr = document.querySelector(`tr[data-row="${i}"]`);
+            if(value === '参加') {
+                tr.classList.remove('bg-red-50', 'opacity-50');
+            } else {
+                tr.classList.add('bg-red-50', 'opacity-50');
+            }
         }
 
         function deleteRow(i) {
@@ -158,7 +176,7 @@
         }
 
         function addRow() {
-            currentRows.push(["1年", "", "参加", "不可", "0", "不可", "0", "", "", true]);
+            currentRows.push(["1年", "", "参加", "不可", "0", "不可", "0", "", ""]);
             renderTable(currentRows);
             document.getElementById('dataTable').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -172,10 +190,8 @@
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
             btn.innerHTML = spin('h-5 w-5') + '保存中...';
-            // row[9] は UI 管理用フラグのため保存データから除く
-            const rows = currentRows.map(r => r.slice(0, 9));
             try {
-                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "updateData", eventName: name, rows }) });
+                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "updateData", eventName: name, rows: currentRows }) });
                 alert(`「【結果】${name}」を6項目に絞って保存しました！`);
             } finally {
                 btn.disabled = false;
