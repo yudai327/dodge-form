@@ -74,10 +74,16 @@
                 let html = eventSheets.map(name => `
                     <div class="flex justify-between items-center p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <span class="text-sm font-bold text-gray-700">${name}</span>
-                        <button onclick="deleteEvent(this)" data-name="${name.replace(/"/g, '&quot;')}"
-                            class="text-[10px] bg-red-50 text-red-500 px-3 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white transition-colors">
-                            削除
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="copyEventUrl(this)" data-name="${name.replace(/"/g, '&quot;')}"
+                                class="text-[10px] bg-blue-50 text-blue-500 px-3 py-2 rounded-xl font-bold hover:bg-blue-500 hover:text-white transition-colors">
+                                URLコピー
+                            </button>
+                            <button onclick="deleteEvent(this)" data-name="${name.replace(/"/g, '&quot;')}"
+                                class="text-[10px] bg-red-50 text-red-500 px-3 py-2 rounded-xl font-bold hover:bg-red-500 hover:text-white transition-colors">
+                                削除
+                            </button>
+                        </div>
                     </div>
                 `).join('');
 
@@ -153,6 +159,15 @@
         function copyUrl() {
             const text = document.getElementById('inviteUrl').value;
             navigator.clipboard.writeText(text).then(() => {
+                alert("URLをコピーしました！LINEなどで共有してください。");
+            });
+        }
+
+        function copyEventUrl(btn) {
+            const name = btn.dataset.name;
+            const dir = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            const url = `${dir}/index.html?event=${encodeURIComponent(name)}`;
+            navigator.clipboard.writeText(url).then(() => {
                 alert("URLをコピーしました！LINEなどで共有してください。");
             });
         }
