@@ -108,12 +108,15 @@
                 const sheets = await res.json();
                 select.innerHTML = '';
                 sheets.forEach(s => {
-                    if(!s.includes("【結果】")) {
+                    if(!s.includes("【結果】") && !sheets.includes("【結果】" + s)) {
                         const opt = new Option(s, s);
                         if(s === eventParam) opt.selected = true;
                         select.add(opt);
                     }
                 });
+                if(select.options.length === 0) {
+                    select.innerHTML = '<option disabled selected>受付中のイベントはありません</option>';
+                }
             } catch(e) {
                 console.error(e);
                 select.innerHTML = '<option disabled selected>読み込みエラー</option>';
