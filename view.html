@@ -4,6 +4,7 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>配車管理</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
 </head>
 <body class="bg-gray-100 p-4 pb-32">
     <div class="max-w-6xl mx-auto">
@@ -11,7 +12,7 @@
             <h1 class="text-xl font-bold">📊 配車管理（学年別）</h1>
             <div class="flex gap-2">
                 <select id="sheetSelect" class="border-2 border-blue-200 p-2 rounded-lg bg-white"></select>
-                <button onclick="loadData()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">読込</button>
+                <button id="loadBtn" onclick="loadData()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold">読込</button>
             </div>
         </div>
 
@@ -35,25 +36,62 @@
     </div>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUiiynEDBvBNe5o7PrhMcCwFypBvrRosmuLaC3vJPM2KCpX6ZLMupBJwlH-SZIj8VO_w/exec";
-        const ADMIN_PASSWORD = "admin123";
         let currentRows = [];
 
         window.onload = async () => {
             const pass = prompt("Password?");
-            if(pass !== ADMIN_PASSWORD) location.href="index.html";
-            const res = await fetch(`${GAS_URL}?action=getSheets`);
-            const sheets = await res.json();
+            if(pass !== ADMIN_PASSWORD) { location.href="index.html"; return; }
             const select = document.getElementById('sheetSelect');
-            sheets.forEach(s => select.innerHTML += `<option value="${s}">${s}</option>`);
+            const loadBtn = document.getElementById('loadBtn');
+            select.innerHTML = '<option disabled selected>読み込み中...</option>';
+            select.disabled = true;
+            loadBtn.disabled = true;
+            try {
+                const res = await fetch(`${GAS_URL}?action=getSheets`);
+                const sheets = await res.json();
+                select.innerHTML = '';
+
+                const eventSheets = sheets.filter(s => !s.includes('【結果】'));
+                const resultSheets = sheets.filter(s => s.includes('【結果】'));
+
+                if(eventSheets.length > 0) {
+                    const grp = document.createElement('optgroup');
+                    grp.label = 'イベント';
+                    eventSheets.forEach(s => grp.appendChild(new Option(s, s)));
+                    select.appendChild(grp);
+                }
+                if(resultSheets.length > 0) {
+                    const grp = document.createElement('optgroup');
+                    grp.label = '結果シート';
+                    resultSheets.forEach(s => grp.appendChild(new Option(s, s)));
+                    select.appendChild(grp);
+                }
+            } catch(e) {
+                select.innerHTML = '<option disabled selected>読み込みエラー</option>';
+            } finally {
+                select.disabled = false;
+                loadBtn.disabled = false;
+            }
         };
 
         async function loadData() {
             const name = document.getElementById('sheetSelect').value;
-            const res = await fetch(`${GAS_URL}?action=getData&sheetName=${encodeURIComponent(name)}`);
-            const data = await res.json();
-            currentRows = data.rows;
-            renderTable(data.rows);
+            const btn = document.getElementById('loadBtn');
+            const tbody = document.getElementById('dataTable');
+            btn.disabled = true;
+            btn.innerHTML = spin() + '読込中';
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-400">${spin('h-6 w-6')}読み込み中...</td></tr>`;
+            try {
+                const res = await fetch(`${GAS_URL}?action=getData&sheetName=${encodeURIComponent(name)}`);
+                const data = await res.json();
+                currentRows = data.rows;
+                renderTable(data.rows);
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-400">読み込みエラーが発生しました</td></tr>';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '読込';
+            }
         }
 
         function renderTable(rows) {
@@ -88,12 +126,21 @@
         }
 
         async function saveChanges() {
+            if(currentRows.length === 0) {
+                alert("先にデータを読み込んでください");
+                return;
+            }
             const name = document.getElementById('sheetSelect').value;
             const btn = document.getElementById('saveBtn');
-            btn.innerText = "保存中...";
-            await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "updateData", eventName: name, rows: currentRows }) });
-            alert(`「【結果】${name}」を6項目に絞って保存しました！`);
-            btn.innerText = "【結果】を作成・保存";
+            btn.disabled = true;
+            btn.innerHTML = spin('h-5 w-5') + '保存中...';
+            try {
+                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "updateData", eventName: name, rows: currentRows }) });
+                alert(`「【結果】${name}」を6項目に絞って保存しました！`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '【結果】を作成・保存';
+            }
         }
     </script>
 </body>

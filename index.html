@@ -4,12 +4,13 @@
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>参加回答</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="config.js"></script>
     <style>
-        .btn-radio:checked + label { 
-            border-color: #3b82f6; 
-            background-color: #eff6ff; 
-            color: #1d4ed8; 
-            font-weight: bold; 
+        .btn-radio:checked + label {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            font-weight: bold;
             box-shadow: 0 0 0 1px #3b82f6;
         }
         /* 右下固定ボタンのアニメーション */
@@ -25,13 +26,13 @@
         <h1 class="text-2xl font-bold text-blue-700 mb-6 border-b pb-4 flex items-center gap-2">
             <span>📝</span> 参加確認アンケート
         </h1>
-        
+
         <form id="ansForm" class="space-y-6">
             <div>
                 <label class="block text-sm font-bold text-gray-600 mb-1 ml-1">対象イベント</label>
                 <select id="eventName" required class="w-full border-2 border-gray-100 rounded-xl p-4 bg-gray-50 font-bold outline-none focus:border-blue-400 appearance-none"></select>
             </div>
-            
+
             <div class="grid grid-cols-5 gap-3">
                 <div class="col-span-2">
                     <label class="block text-sm font-bold text-gray-600 mb-1 ml-1">学年</label>
@@ -83,7 +84,7 @@
                 <label class="block text-sm font-bold text-gray-600 mb-1 ml-1">備考</label>
                 <textarea id="note" placeholder="連絡事項など" class="w-full border-2 border-gray-100 p-4 rounded-xl outline-none focus:border-blue-400 bg-white" rows="3"></textarea>
             </div>
-            
+
             <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl shadow-xl active:scale-95 text-lg transition-all hover:bg-blue-700">
                 回答を送信する
             </button>
@@ -95,14 +96,17 @@
     </a>
 
     <script>
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbwUiiynEDBvBNe5o7PrhMcCwFypBvrRosmuLaC3vJPM2KCpX6ZLMupBJwlH-SZIj8VO_w/exec"; // ★最新のURLに差し替えてください
-
         window.onload = async () => {
             const select = document.getElementById('eventName');
+            const submitBtn = document.getElementById('submitBtn');
             const eventParam = new URLSearchParams(window.location.search).get('event');
+            select.innerHTML = '<option disabled selected>読み込み中...</option>';
+            select.disabled = true;
+            submitBtn.disabled = true;
             try {
                 const res = await fetch(`${GAS_URL}?action=getSheets`);
                 const sheets = await res.json();
+                select.innerHTML = '';
                 sheets.forEach(s => {
                     if(!s.includes("【結果】")) {
                         const opt = new Option(s, s);
@@ -110,13 +114,20 @@
                         select.add(opt);
                     }
                 });
-            } catch(e) { console.error(e); }
+            } catch(e) {
+                console.error(e);
+                select.innerHTML = '<option disabled selected>読み込みエラー</option>';
+            } finally {
+                select.disabled = false;
+                submitBtn.disabled = false;
+            }
         };
 
         document.getElementById('ansForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "送信中...";
+            btn.disabled = true;
+            btn.innerHTML = spin('h-5 w-5') + '送信中...';
             const data = {
                 eventName: document.getElementById('eventName').value,
                 grade: document.getElementById('grade').value,
@@ -134,7 +145,8 @@
                 location.reload();
             } catch(e) {
                 alert("送信エラー");
-                btn.disabled = false; btn.innerText = "回答を送信する";
+                btn.disabled = false;
+                btn.innerHTML = "回答を送信する";
             }
         });
     </script>
