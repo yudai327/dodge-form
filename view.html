@@ -17,7 +17,7 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl overflow-x-auto border">
-            <table class="w-full text-left border-collapse min-w-[1000px]">
+            <table class="w-full text-left border-collapse min-w-[1060px]">
                 <thead>
                     <tr class="bg-slate-800 text-white text-[10px]">
                         <th class="p-4 border-r border-slate-700 w-16">学年</th>
@@ -25,12 +25,17 @@
                         <th class="p-4 border-r border-slate-700 text-center w-20">参加</th>
                         <th class="p-4 border-r border-slate-700 bg-blue-900 w-44">自車(空き) / 確定</th>
                         <th class="p-4 border-r border-slate-700 bg-orange-900 w-56">他車(希望) / 配車メモ</th>
-                        <th class="p-4">備考 (上書き・編集用)</th>
+                        <th class="p-4 border-r border-slate-700">備考 (上書き・編集用)</th>
+                        <th class="p-2 w-10"></th>
                     </tr>
                 </thead>
                 <tbody id="dataTable" class="text-xs"></tbody>
             </table>
         </div>
+
+        <button onclick="addRow()" id="addRowBtn" class="hidden mt-3 w-full border-2 border-dashed border-gray-300 text-gray-400 py-3 rounded-xl hover:border-blue-400 hover:text-blue-500 transition-colors font-bold text-sm">
+            ＋ 行を追加
+        </button>
 
         <button onclick="saveChanges()" id="saveBtn" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-green-600 text-white px-12 py-5 rounded-full font-black shadow-2xl active:scale-95 text-lg">【結果】を作成・保存</button>
     </div>
@@ -80,14 +85,15 @@
             const tbody = document.getElementById('dataTable');
             btn.disabled = true;
             btn.innerHTML = spin() + '読込中';
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center p-8 text-gray-400">${spin('h-6 w-6')}読み込み中...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center p-8 text-gray-400">${spin('h-6 w-6')}読み込み中...</td></tr>`;
             try {
                 const res = await fetch(`${GAS_URL}?action=getData&sheetName=${encodeURIComponent(name)}`);
                 const data = await res.json();
                 currentRows = data.rows;
-                renderTable(data.rows);
+                renderTable(currentRows);
+                document.getElementById('addRowBtn').classList.remove('hidden');
             } catch(e) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-400">読み込みエラーが発生しました</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-red-400">読み込みエラーが発生しました</td></tr>';
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '読込';
@@ -97,17 +103,35 @@
         function renderTable(rows) {
             const tbody = document.getElementById('dataTable');
             tbody.innerHTML = rows.map((row, i) => {
+                const isManual = !!row[9];
                 const isAttending = row[2] === '参加';
                 let memo = (row[7] || "").toString();
                 let note = (row[8] || "").toString();
                 if(memo.includes('T') && memo.includes('Z')) memo = ""; // 日付誤入ガード
                 if(note.includes('T') && note.includes('Z')) note = "";
 
+                const gradeCell = isManual
+                    ? `<select onchange="currentRows[${i}][0]=this.value" class="w-full p-1 border rounded text-xs bg-white">
+                        ${['1年','2年','3年','4年','5年','6年'].map(g => `<option ${row[0]===g?'selected':''}>${g}</option>`).join('')}
+                       </select>`
+                    : row[0];
+
+                const nameCell = isManual
+                    ? `<input type="text" value="${row[1]}" oninput="currentRows[${i}][1]=this.value" class="w-full p-2 border rounded shadow-sm font-bold" placeholder="氏名">`
+                    : row[1];
+
+                const attendanceCell = isManual
+                    ? `<select onchange="currentRows[${i}][2]=this.value" class="w-full p-1 border rounded text-xs text-center bg-white">
+                        <option ${row[2]==='参加'?'selected':''}>参加</option>
+                        <option ${row[2]==='不参加'?'selected':''}>不参加</option>
+                       </select>`
+                    : row[2];
+
                 return `
                 <tr class="${isAttending ? '' : 'bg-red-50 opacity-50'} border-b">
-                    <td class="p-4 border-r">${row[0]}</td>
-                    <td class="p-4 font-bold border-r">${row[1]}</td>
-                    <td class="p-4 text-center border-r font-bold">${row[2]}</td>
+                    <td class="p-4 border-r">${gradeCell}</td>
+                    <td class="p-4 font-bold border-r">${nameCell}</td>
+                    <td class="p-4 text-center border-r font-bold">${attendanceCell}</td>
                     <td class="p-4 bg-blue-50/50 border-r">
                         <div class="flex items-center justify-between">
                             <span>${row[3]==='可' ? `空き:${row[4]}` : '-'}</span>
@@ -120,9 +144,23 @@
                             <input type="text" value="${memo}" oninput="currentRows[${i}][7]=this.value" class="w-full p-2 border rounded shadow-sm" placeholder="配車先を入力">
                         </div>
                     </td>
-                    <td class="p-2"><textarea oninput="currentRows[${i}][8]=this.value" class="w-full p-2 border rounded h-12 shadow-sm">${note}</textarea></td>
+                    <td class="p-2 border-r"><textarea oninput="currentRows[${i}][8]=this.value" class="w-full p-2 border rounded h-12 shadow-sm">${note}</textarea></td>
+                    <td class="p-2 text-center">
+                        <button onclick="deleteRow(${i})" class="text-red-300 hover:text-red-600 hover:bg-red-50 font-bold text-base w-7 h-7 rounded-full transition-colors" title="この行を除外">✕</button>
+                    </td>
                 </tr>
             `}).join('');
+        }
+
+        function deleteRow(i) {
+            currentRows.splice(i, 1);
+            renderTable(currentRows);
+        }
+
+        function addRow() {
+            currentRows.push(["1年", "", "参加", "不可", "0", "不可", "0", "", "", true]);
+            renderTable(currentRows);
+            document.getElementById('dataTable').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         async function saveChanges() {
@@ -134,8 +172,10 @@
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
             btn.innerHTML = spin('h-5 w-5') + '保存中...';
+            // row[9] は UI 管理用フラグのため保存データから除く
+            const rows = currentRows.map(r => r.slice(0, 9));
             try {
-                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "updateData", eventName: name, rows: currentRows }) });
+                await fetch(GAS_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ type: "updateData", eventName: name, rows }) });
                 alert(`「【結果】${name}」を6項目に絞って保存しました！`);
             } finally {
                 btn.disabled = false;
